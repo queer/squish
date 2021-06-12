@@ -1,20 +1,14 @@
-extern crate nix;
-
-use std::env;
 use std::fs;
 use std::io::Error;
 use std::process;
 
 use nix::sched::{clone, CloneFlags};
-use nix::mount::{mount, MsFlags};
+// use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot};
 
 const STACK_SIZE: usize = 4 * 1024 * 1024;
 
-fn main() -> Result<(), nix::Error> {
-    let args: Vec<String> = env::args().collect();
-    let child_args = &args[1..];
-
+pub fn spawn_container() -> Result<(), nix::Error> {
     let ref mut stack: [u8; STACK_SIZE] = [0; STACK_SIZE];
 
     let callback = || {
@@ -29,10 +23,6 @@ fn main() -> Result<(), nix::Error> {
         chroot("container/newrootfs").expect("couldn't pivot root!?");
         chdir("/").expect("couldn't chdir to /!?");
 
-        let mut fork_args = vec!["container"];
-        let mut inner_child_args: Vec<&str> = child_args.iter().map(|x| x.as_str()).collect();
-        fork_args.append(&mut inner_child_args);
-        dbg!(inner_child_args);
         run_in_container();
         println!(">> done!");
         0
@@ -41,7 +31,10 @@ fn main() -> Result<(), nix::Error> {
     let pid = clone(
         Box::new(callback),
         stack,
-        CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWUTS | CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWUSER,
+        CloneFlags::CLONE_NEWPID
+            | CloneFlags::CLONE_NEWUTS
+            | CloneFlags::CLONE_NEWNS
+            | CloneFlags::CLONE_NEWUSER,
         None,
     )?;
     if (pid.as_raw() as i32) == -1 {

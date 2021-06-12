@@ -1,0 +1,18 @@
+[package]
+name = "daemon"
+version = "0.1.0"
+authors = ["amy null <null@amy.gg>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libsquish = { path = "../libsquish" }
+
+log = "0.4.14"
+nix = "0.21.0"
+pretty_env_logger = "0.4.0"
+tokio = { version = "1.6.1", features = [ "full" ] }
+tokio-stream = { version = "0.1.6", features = [ "net" ] }
+tokio-util = { version = "0.6", features = ["io"] }
+warp = "0.3.1"
