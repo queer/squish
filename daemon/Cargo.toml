@@ -15,6 +15,7 @@ hmac-sha256 = "0.1.7"
 log = "0.4.14"
 nix = "0.21.0"
 pretty_env_logger = "0.4.0"
+rlimit = "0.5.4"
 reqwest = "0.11.3"
 tar = "0.4.35"
 tokio = { version = "1.6.1", features = [ "full" ] }

@@ -13,10 +13,24 @@ use nix::mount::{mount, MsFlags};
 use nix::sched::{clone, CloneFlags};
 use nix::sys::signal::Signal;
 use nix::unistd::{chdir, chroot};
-
-const STACK_SIZE: usize = 1024 * 1024;
+use rlimit::Resource;
 
 pub fn spawn_container() -> Result<nix::unistd::Pid, nix::Error> {
+    let stack_size = match Resource::STACK.get() {
+        Ok((soft, hard)) => {
+            debug!(
+                "soft stack={}, hard stack={}",
+                soft.as_usize(),
+                hard.as_usize()
+            );
+            soft.as_usize()
+        }
+        Err(_) => {
+            // 8MB
+            8 * 1024 * 1024
+        }
+    };
+
     // TODO: This should probably re-exec /proc/self/exe instead of just immediately cloning
     println!("boot at {}", util::now_ms());
     let callback = || {
@@ -45,7 +59,8 @@ pub fn spawn_container() -> Result<nix::unistd::Pid, nix::Error> {
     let (tx, rx) = channel();
 
     spawn(move || {
-        let ref mut stack: [u8; STACK_SIZE] = [0; STACK_SIZE];
+        let mut stack_vec = vec![0u8; stack_size];
+        let stack: &mut [u8] = stack_vec.as_mut_slice();
 
         let pid = clone(
             Box::new(callback),
