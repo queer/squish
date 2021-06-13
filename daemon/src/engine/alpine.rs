@@ -103,6 +103,7 @@ fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
     File::create(format!("{}/dev/zero", rootfs))?;
     File::create(format!("{}/dev/random", rootfs))?;
     File::create(format!("{}/dev/urandom", rootfs))?;
+    File::create(format!("{}/dev/console", rootfs))?;
     fs::create_dir_all(format!("{}/dev/shm", rootfs))?;
     fs::create_dir_all(format!("{}/dev/pts", rootfs))?;
     fs::create_dir_all(format!("{}/proc", rootfs))?;
