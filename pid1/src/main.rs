@@ -10,8 +10,7 @@ use clap::{App, Arg};
 use nix::mount::{mount, MsFlags};
 use nix::sched::{clone, CloneFlags};
 use nix::sys::signal::Signal;
-use nix::unistd::{chdir, chroot};
-use nix::unistd::{close, dup, dup2};
+use nix::unistd::{chdir, chroot, close, dup, dup2};
 use rlimit::Resource;
 
 fn main() -> Result<(), nix::Error> {
@@ -67,27 +66,40 @@ fn spawn_container(rootfs: String, container_id: String) -> Result<nix::unistd::
         close(1).unwrap();
         close(2).unwrap();
 
-        let logfile = fs::OpenOptions::new()
+        let stdout_log = fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(format!("container/{}/output.log", container_id))
             .unwrap();
-        let log_fd = logfile.into_raw_fd();
+        let stdout_log_fd = stdout_log.into_raw_fd();
+        let stderr_log = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(format!("container/{}/error.log", container_id))
+            .unwrap();
+        let stderr_log_fd = stderr_log.into_raw_fd();
+
         // TODO: Lol buffering
-        dup2(log_fd, stdout_dup).unwrap();
-        dup2(log_fd, stderr_dup).unwrap();
+        dup2(stdout_log_fd, stdout_dup).unwrap();
+        dup2(stderr_log_fd, stderr_dup).unwrap();
         close(stdout_dup).unwrap();
         close(stderr_dup).unwrap();
 
+        // Bindmount rootfs ro
+        bind_mount(&rootfs, &container_path, MsFlags::MS_RDONLY);
+
+        // Bind-mount *nix stuff in
+        println!(">> bindmounting devices");
+        bind_mount_dev("/dev/null", &format!("{}/dev/null", container_path));
+        bind_mount_dev("/dev/zero", &format!("{}/dev/zero", container_path));
+        bind_mount_dev("/dev/random", &format!("{}/dev/random", container_path));
+        bind_mount_dev("/dev/urandom", &format!("{}/dev/urandom", container_path));
+        println!(">> bindmounting devices finished!");
+
         // TODO: User-defined bindmounts
-        mount(
-            Some(rootfs.as_str()),
-            container_path.clone().as_str(),
-            Some(""),
-            MsFlags::MS_BIND | MsFlags::MS_RDONLY,
-            Some(""),
-        )
-        .expect("couldn't mount rootfs");
+        // bind_mount(rootfs,  format!("container/{}/dev/pts", container_id), MsFlags::MS_BIND);
+
+        // chroot!
         chroot(container_path.as_str()).expect("couldn't chroot!?");
         chdir("/").expect("couldn't chdir to /!?");
 
@@ -130,4 +142,28 @@ fn run_in_container() {
     } else {
         println!(">> warning: could not read_dir /");
     }
+}
+
+fn bind_mount_dev(dev: &'static str, target: &String) {
+    println!(">> bindmount dev {} -> {}", dev, target);
+    mount(
+        Some(dev),
+        target.as_str(),
+        Some(""),
+        MsFlags::MS_BIND,
+        Some("")
+    )
+    .expect(format!("couldn't mount dev {} -> {}", dev, target).as_str());
+}
+
+fn bind_mount(src: &String, target: &String, flags: MsFlags) {
+    println!(">> bindmount {} -> {}", src, target);
+    mount(
+        Some(src.as_str()),
+        target.as_str(),
+        Some(""),
+        MsFlags::MS_BIND | flags,
+        Some(""),
+    )
+    .expect(format!("couldn't mount {} -> {}", src, target).as_str());
 }

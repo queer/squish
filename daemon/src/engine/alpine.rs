@@ -1,6 +1,7 @@
 use crate::util::SquishError;
 
 use std::fs;
+use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
@@ -53,7 +54,8 @@ pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(rootfs_manifest) = maybe_rootfs_manifest {
             info!("found alpine minirootfs! downloading...");
             let tarball = download_rootfs(rootfs_manifest).await?;
-            extract_tarball(tarball, current_rootfs())
+            extract_tarball(tarball, current_rootfs())?;
+            setup_rootfs(current_rootfs())
         } else {
             Err(Box::new(SquishError::AlpineManifestMissing))
         }
@@ -92,5 +94,18 @@ fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn std:
     let tar = flate2::read::GzDecoder::new(tarball);
     let mut archive = tar::Archive::new(tar);
     archive.unpack(target_path)?;
+    Ok(())
+}
+
+fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
+    info!("setting up dummy devices");
+    File::create(format!("{}/dev/null", rootfs))?;
+    File::create(format!("{}/dev/zero", rootfs))?;
+    File::create(format!("{}/dev/random", rootfs))?;
+    File::create(format!("{}/dev/urandom", rootfs))?;
+    fs::create_dir_all(format!("{}/dev/shm", rootfs))?;
+    fs::create_dir_all(format!("{}/dev/pts", rootfs))?;
+    fs::create_dir_all(format!("{}/proc", rootfs))?;
+    fs::create_dir_all(format!("{}/sys", rootfs))?;
     Ok(())
 }
