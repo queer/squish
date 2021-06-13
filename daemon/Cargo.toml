@@ -10,6 +10,8 @@ edition = "2018"
 libsquish = { path = "../libsquish" }
 
 flate2 = "1.0.20"
+haikunator = "0.1.2"
+hmac-sha256 = "0.1.7"
 log = "0.4.14"
 nix = "0.21.0"
 pretty_env_logger = "0.4.0"
