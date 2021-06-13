@@ -61,6 +61,15 @@ impl ContainerState {
         }
         Ok(())
     }
+
+    /// id <-> name
+    pub fn running_containers(&self) -> HashMap<String, String> {
+        let mut map: HashMap<String, String> = HashMap::new();
+        for (k, v) in &self.id_map {
+            map.insert(k.clone(), v.name.clone());
+        }
+        map
+    }
 }
 
 pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
