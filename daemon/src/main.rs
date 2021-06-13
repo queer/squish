@@ -1,5 +1,6 @@
 extern crate flate2;
 extern crate haikunator;
+extern crate hex;
 extern crate hmac_sha256;
 #[macro_use]
 extern crate log;
@@ -44,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let global_state = Arc::new(Mutex::new(ContainerState::new()));
 
     let clone = global_state.clone();
-    tokio::spawn(engine::containers::signal_handler(clone));
+    tokio::spawn(engine::containers::reap_children(clone));
 
     let container_create = warp::path!("containers" / "create")
         .and(warp::post())

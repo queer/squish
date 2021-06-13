@@ -3,4 +3,5 @@ members = [
   "libsquish",
   "daemon",
   "cli",
+  "pid1",
 ]

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
+use std::thread::sleep;
+use std::time::Duration;
 
 use haikunator::Haikunator;
-use nix::sys::wait::{WaitPidFlag, WaitStatus};
-use nix::sys::wait::waitpid;
 use nix::unistd::Pid;
-use tokio::signal::unix::{signal, SignalKind};
 
 #[derive(Debug)]
 pub struct ContainerState {
@@ -28,30 +28,30 @@ impl ContainerState {
         }
     }
 
+    pub fn generate_id() -> (String, String) {
+        let haiku = Haikunator::default();
+        let name = haiku.haikunate();
+        let hash = hmac_sha256::Hash::hash(name.as_bytes());
+        let id = hex::encode(hash);
+        (id, name)
+    }
+
     pub fn add_container(
         &mut self,
         pid: nix::unistd::Pid,
+        id: String,
+        name: String,
     ) -> Result<(), Box<dyn std::error::Error + '_>> {
-        // TODO: Move this to utils?
-        let haiku = Haikunator::default();
-        let name = haiku.haikunate();
-
-        let container_id = self.gen_id(&name);
         self.id_map.insert(
-            container_id.clone(),
+            id.clone(),
             Container {
                 name,
-                id: container_id.clone(),
+                id: id.clone(),
                 pid,
             },
         );
-        self.pid_id_map.insert(pid, container_id.clone());
+        self.pid_id_map.insert(pid, id.clone());
         Ok(())
-    }
-
-    fn gen_id(&self, input: &String) -> String {
-        let hash = hmac_sha256::Hash::hash(input.as_bytes());
-        format!("{:x?}", hash)
     }
 
     pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn std::error::Error + '_>> {
@@ -63,29 +63,20 @@ impl ContainerState {
     }
 }
 
-pub async fn signal_handler(state: Arc<Mutex<ContainerState>>) {
-    let mut stream = signal(SignalKind::child()).unwrap();
+pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     loop {
-        stream.recv().await;
+        sleep(Duration::from_millis(100));
         let mut container_state = state.lock().unwrap();
 
         let clone = container_state.pid_id_map.clone();
 
         for (pid, id) in clone.iter() {
             debug!("checking {}", pid.as_raw());
-            match waitpid(Some(*pid), Some(WaitPidFlag::WNOHANG)) {
-                Ok(status) => {
-                    match status {
-                        WaitStatus::Exited(_, _) => {
-                            if let Ok(_) = container_state.remove_container(id) {
-                                info!("cleaned up dead container {}", pid.as_raw());
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                Err(e) => {
-                    error!("couldn't check wait status of {}: {}", pid.as_raw(), e);
+            let path = format!("/proc/{}", pid.as_raw());
+            let path = Path::new(&path);
+            if !path.exists() {
+                if let Ok(_) = container_state.remove_container(id) {
+                    info!("cleaned up dead container {}", pid.as_raw());
                 }
             }
         }
