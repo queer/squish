@@ -117,6 +117,7 @@ fn spawn_container(rootfs: String, container_id: String) -> Result<nix::unistd::
         CloneFlags::CLONE_NEWPID
             | CloneFlags::CLONE_NEWUTS
             | CloneFlags::CLONE_NEWNS
+            | CloneFlags::CLONE_NEWNET
             | CloneFlags::CLONE_NEWUSER,
         // TODO: Better way?
         Some(Signal::SIGCHLD as i32),
