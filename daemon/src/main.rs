@@ -1,9 +1,13 @@
+extern crate flate2;
 #[macro_use]
 extern crate log;
 extern crate nix;
 extern crate pretty_env_logger;
+extern crate reqwest;
+extern crate tar;
 extern crate tokio;
 extern crate warp;
+extern crate yaml_rust;
 
 use std::fs;
 use std::path::Path;
@@ -23,13 +27,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
     info!("squishd booting...");
 
-    let path = Path::new("/tmp/squishd.sock");
+    info!("prefetching alpine base image...");
+    engine::alpine::download_base_image().await?;
 
+    let path = Path::new("/tmp/squishd.sock");
     if path.exists() {
         fs::remove_file(path)?;
     }
-
-    // spawn_container()?;
 
     let container_create = warp::path!("containers" / "create")
         .and(warp::post())
@@ -38,16 +42,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(warp::get())
         .and_then(handlers::container::list_containers);
 
-    let routes = warp::get().and(
-        container_create
-            .or(container_list)
-    );
+    let log = warp::log("squishd");
+    let routes = warp::any()
+        .and(container_create.or(container_list))
+        .with(log);
 
     let listener = UnixListener::bind(path).unwrap();
     let incoming = UnixListenerStream::new(listener);
-    warp::serve(routes)
-        .run_incoming(incoming)
-        .await;
+    warp::serve(routes).run_incoming(incoming).await;
 
     Ok(())
 }
@@ -55,5 +57,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(not(unix))]
 #[tokio::main]
 async fn main() {
-    panic!("Must run under Unix-like platform!");
+    panic!("squishd must be run on a unix-like os!");
 }
