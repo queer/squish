@@ -4,6 +4,8 @@ use std::{error::Error, fmt::Display};
 pub enum SquishError {
     GenericError(Box<dyn std::error::Error + Send + Sync>),
 
+    SlirpSocketCouldntBeFound,
+
     AlpineManifestInvalid,
     AlpineManifestMissing,
     AlpineManifestFileMissing,

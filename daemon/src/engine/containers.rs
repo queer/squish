@@ -5,6 +5,8 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use haikunator::Haikunator;
+use nix::sys::signal::kill;
+use nix::sys::signal;
 use nix::unistd::Pid;
 
 #[derive(Debug)]
@@ -17,6 +19,7 @@ pub struct ContainerState {
 pub struct Container {
     pub name: String,
     pub pid: nix::unistd::Pid,
+    pub slirp_pid: nix::unistd::Pid,
     pub id: String,
 }
 
@@ -39,6 +42,7 @@ impl ContainerState {
     pub fn add_container(
         &mut self,
         pid: nix::unistd::Pid,
+        slirp_pid: nix::unistd::Pid,
         id: String,
         name: String,
     ) -> Result<(), Box<dyn std::error::Error + '_>> {
@@ -48,6 +52,7 @@ impl ContainerState {
                 name,
                 id: id.clone(),
                 pid,
+                slirp_pid,
             },
         );
         self.pid_id_map.insert(pid, id.clone());
@@ -58,6 +63,7 @@ impl ContainerState {
         let container = self.id_map.remove(id);
         if let Some(container) = container {
             self.pid_id_map.remove(&container.pid);
+            kill(container.slirp_pid, signal::SIGTERM)?;
         }
         Ok(())
     }
@@ -80,12 +86,13 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
         let clone = container_state.pid_id_map.clone();
 
         for (pid, id) in clone.iter() {
-            debug!("checking {}", pid.as_raw());
+            // debug!("checking {}", pid.as_raw());
             let path = format!("/proc/{}", pid.as_raw());
             let path = Path::new(&path);
             if !path.exists() {
-                if let Ok(_) = container_state.remove_container(id) {
-                    info!("cleaned up dead container {}", pid.as_raw());
+                match container_state.remove_container(id) {
+                    Ok(_) => info!("cleaned up dead container {}", pid.as_raw()),
+                    Err(e) => error!("error cleaning up dead container {}: {}", pid.as_raw(), e),
                 }
             }
         }

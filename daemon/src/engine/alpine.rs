@@ -108,5 +108,8 @@ fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(format!("{}/dev/pts", rootfs))?;
     fs::create_dir_all(format!("{}/proc", rootfs))?;
     fs::create_dir_all(format!("{}/sys", rootfs))?;
+    let mut resolv = File::create(format!("{}/etc/resolv.conf", rootfs))?;
+    // TODO: We should be better with nameservers
+    resolv.write("nameserver 10.0.2.3".as_bytes())?; // slirp4netns
     Ok(())
 }

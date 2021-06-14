@@ -36,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("prefetching alpine base image...");
     engine::alpine::download_base_image().await?;
+    engine::slirp::download_slirp4netns().await?;
 
     let path = Path::new("/tmp/squishd.sock");
     if path.exists() {
