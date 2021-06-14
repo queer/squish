@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .get_matches();
 
     match matches.subcommand_name() {
-        Some("list") => {
+        Some("ps") => {
             let res = client::get("/containers/list").await?;
             println!("got value: {}", res);
         },

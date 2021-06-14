@@ -96,4 +96,5 @@ fn run_in_container() {
     } else {
         println!(">> warning: could not read_dir /");
     }
+    std::process::Command::new("sleep").arg("30").output().unwrap();
 }
