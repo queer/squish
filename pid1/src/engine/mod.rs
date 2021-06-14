@@ -2,7 +2,6 @@ use std::error::Error;
 use std::fs;
 use std::os::unix::io::IntoRawFd;
 use std::process;
-use std::process::Command;
 
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
@@ -97,10 +96,4 @@ fn run_in_container() {
     } else {
         println!(">> warning: could not read_dir /");
     }
-    println!(">> running nc on port 2000");
-    Command::new("/usr/bin/ncat")
-        .args(vec!["-l", "2000", "--keep-open", "--exec", "'/bin/cat'"])
-        .output()
-        .unwrap();
-    println!(">> nc done!");
 }
