@@ -1,19 +1,14 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use std::thread::sleep;
 use std::time::Duration;
 
 use haikunator::Haikunator;
 use nix::sys::signal::kill;
 use nix::sys::signal;
 use nix::unistd::Pid;
-
-#[derive(Debug)]
-pub struct ContainerState {
-    id_map: HashMap<String, Container>,
-    pid_id_map: HashMap<Pid, String>,
-}
+use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct Container {
@@ -21,6 +16,23 @@ pub struct Container {
     pub pid: nix::unistd::Pid,
     pub slirp_pid: nix::unistd::Pid,
     pub id: String,
+    pub created_at: u128,
+}
+
+impl Into<libsquish::RunningContainer> for &Container {
+    fn into(self) -> libsquish::RunningContainer {
+        libsquish::RunningContainer {
+            id: self.id.clone(),
+            name: self.name.clone(),
+            pid: self.pid.as_raw(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ContainerState {
+    id_map: HashMap<String, Container>,
+    pid_id_map: HashMap<Pid, String>,
 }
 
 impl ContainerState {
@@ -45,7 +57,7 @@ impl ContainerState {
         slirp_pid: nix::unistd::Pid,
         id: String,
         name: String,
-    ) -> Result<(), Box<dyn std::error::Error + '_>> {
+    ) -> Result<(), Box<dyn Error + '_>> {
         self.id_map.insert(
             id.clone(),
             Container {
@@ -53,13 +65,14 @@ impl ContainerState {
                 id: id.clone(),
                 pid,
                 slirp_pid,
+                created_at: libsquish::now()?,
             },
         );
         self.pid_id_map.insert(pid, id.clone());
         Ok(())
     }
 
-    pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn std::error::Error + '_>> {
+    pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn Error + '_>> {
         let container = self.id_map.remove(id);
         if let Some(container) = container {
             self.pid_id_map.remove(&container.pid);
@@ -69,18 +82,18 @@ impl ContainerState {
     }
 
     /// id <-> name
-    pub fn running_containers(&self) -> HashMap<String, String> {
-        let mut map: HashMap<String, String> = HashMap::new();
-        for (k, v) in &self.id_map {
-            map.insert(k.clone(), v.name.clone());
+    pub fn running_containers(&self) -> Vec<libsquish::RunningContainer> {
+        let mut out = vec![];
+        for v in self.id_map.values() {
+            out.push(v.into());
         }
-        map
+        out
     }
 }
 
 pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     loop {
-        sleep(Duration::from_millis(100));
+        sleep(Duration::from_millis(100)).await;
         let mut container_state = state.lock().unwrap();
 
         let clone = container_state.pid_id_map.clone();

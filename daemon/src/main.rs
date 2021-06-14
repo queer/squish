@@ -2,6 +2,7 @@ extern crate flate2;
 extern crate haikunator;
 extern crate hex;
 extern crate hmac_sha256;
+extern crate libsquish;
 #[macro_use]
 extern crate log;
 extern crate nix;
