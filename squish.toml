@@ -8,8 +8,6 @@ app = "./my-app.tar.gz" # Tarballs, zips, etc. should be automatically detected 
 # args = ["/app/main.py", "--flag", "--other-flag=whatever"]
 command = "sleep"
 args = [ "5" ]
-uid = 1000
-gid = 1000
 
 [env]
 KEY = "value"
