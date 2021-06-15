@@ -41,7 +41,7 @@ pub fn setup_container(
     close(stderr_dup).unwrap();
 
     // Bindmount rootfs ro
-    bind_mount(&rootfs, &container_path, MsFlags::MS_RDONLY)?;
+    bind_mount(&rootfs, &container_path, MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID)?;
 
     // Bind-mount *nix stuff in
     println!(">> bindmounting devices");
@@ -78,6 +78,7 @@ fn bind_mount_dev(dev: &'static str, target: &String) -> Result<(), Box<dyn Erro
 
 fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<dyn Error>> {
     println!(">> bindmount {} -> {}", src, target);
+
     mount(
         Some(src.as_str()),
         target.as_str(),

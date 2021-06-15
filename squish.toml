@@ -1,0 +1,18 @@
+[layers]
+alpine = "3.14" # If not specified, uses squishd's latest-known-version
+python = "3.9" # Support more ways of choosing versions? (ex. ~3.9 gives any 3.9.x or some shit)
+app = "./my-app.tar.gz" # Tarballs, zips, etc. should be automatically detected and extracted (ideally hash+cache?)
+
+[run]
+command = "/sdks/python/bin/python /app/main.py --flag --other-flag=whatever" # I hate args array
+uid = 1000
+gid = 1000
+
+[env]
+KEY = "value"
+IN_SQUISH_CONTAINER = "true"
+
+[[ports]]
+container = 2000
+host = 42069
+protocol = "tcp"

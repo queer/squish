@@ -5,12 +5,18 @@ pub mod slirp;
 use std::error::Error;
 use std::process::{Command, Stdio};
 
+use libsquish::squishfile::Squishfile;
 use nix::unistd::Pid;
 
 use crate::engine::alpine::current_rootfs;
 
 /// (container pid, slirp pid)
-pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
+pub async fn spawn_container(id: &String, squishfile: Squishfile) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
+    // TODO: Ensure layers are cached
+    // TODO: Pass layer names + paths to pid1
+    // TODO: Pass uid and gid to pid1
+    // TODO: Pass command to pid1
+
     // TODO: Don't hardcode this plz
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
@@ -21,6 +27,7 @@ pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + S
             "--path",
             containers::path_to(&id).as_str(),
         ])
+        .envs(squishfile.env())
         .output()?;
 
     let stdout = String::from_utf8(pid1.stdout).unwrap();
@@ -48,36 +55,13 @@ pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + S
         slirp.wait_with_output().await.unwrap();
     });
 
-    let add_res = slirp::slirp_exec(
-        &slirp_socket_path,
-        r#"
-        {
-            "execute": "add_hostfwd",
-            "arguments": {
-                "proto": "tcp",
-                "host_ip": "127.0.0.1",
-                "host_port": 42069,
-                "guest_port": 2000
-            }
-        }
-    "#,
-    )
-    .await?;
-    info!("slirp said: {}", add_res);
-
-    let list_res = slirp::slirp_exec(
-        &slirp_socket_path,
-        r#"
-        {
-            "execute": "list_hostfwd"
-        }
-    "#,
-    )
-    .await?;
-    info!("slirp said: {}", list_res);
+    for port in squishfile.ports() {
+        slirp::add_port_forward(&slirp_socket_path, port.host(), port.container()).await?;
+        info!("{}: added port forward: {} -> {}", &id, port.host(), port.container());
+    }
 
     let stderr = String::from_utf8(pid1.stderr).unwrap();
-    info!("container spawn stderr:\n{}", stderr);
+    info!("{}: container spawn stderr:\n{}", &id, stderr);
 
     Ok((Pid::from_raw(child_pid), Pid::from_raw(slirp_pid)))
 }

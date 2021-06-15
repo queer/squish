@@ -98,6 +98,7 @@ fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn std:
 }
 
 fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
+    // devices
     info!("setting up dummy devices");
     File::create(format!("{}/dev/null", rootfs))?;
     File::create(format!("{}/dev/zero", rootfs))?;
@@ -106,10 +107,20 @@ fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
     File::create(format!("{}/dev/console", rootfs))?;
     fs::create_dir_all(format!("{}/dev/shm", rootfs))?;
     fs::create_dir_all(format!("{}/dev/pts", rootfs))?;
+
+    // mountable dirs
+    info!("setting up /proc and /sys stubs");
     fs::create_dir_all(format!("{}/proc", rootfs))?;
     fs::create_dir_all(format!("{}/sys", rootfs))?;
+
+    // squish layers
+    info!("setting up squish layer stubs");
+    fs::create_dir_all(format!("{}/app", rootfs))?;
+    fs::create_dir_all(format!("{}/sdk", rootfs))?;
+
+    // networking
+    info!("setting up resolv.conf");
     let mut resolv = File::create(format!("{}/etc/resolv.conf", rootfs))?;
-    // TODO: We should be better with nameservers
     resolv.write("nameserver 10.0.2.3".as_bytes())?; // slirp4netns
     Ok(())
 }

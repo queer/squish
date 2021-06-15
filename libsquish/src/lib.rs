@@ -1,3 +1,5 @@
+pub mod squishfile;
+
 use std::error::Error;
 use std::time::SystemTime;
 

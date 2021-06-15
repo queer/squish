@@ -20,7 +20,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use libsquish::squishfile;
 use warp::Filter;
+use warp::hyper::body::Bytes;
 
 mod engine;
 mod handlers;
@@ -52,6 +54,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let container_create = warp::path!("containers" / "create")
         .and(warp::post())
         .and(with_state(global_state.clone()))
+        .and(warp::body::bytes().map(|bytes: Bytes| {
+            let mut vec: Vec<u8> = vec![];
+            for byte in bytes.iter() {
+                vec.push(*byte);
+            }
+            let body = String::from_utf8(vec).expect("squishfile not valid string");
+            squishfile::parse_str(&*body).expect("squishfile invalid")
+        }))
         .and_then(handlers::container::create_container);
     let container_list = warp::path!("containers" / "list")
         .and(warp::get())

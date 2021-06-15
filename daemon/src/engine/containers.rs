@@ -14,7 +14,7 @@ use tokio::time::sleep;
 #[derive(Debug)]
 pub struct Container {
     pub name: String,
-    pub pid: nix::unistd::Pid,
+    pub pid: nix::unistd::Pid, // TODO: Support multi-pid
     pub slirp_pid: nix::unistd::Pid,
     pub id: String,
     pub created_at: u128,
@@ -119,6 +119,7 @@ fn cleanup_container<'a>(
 ) -> Result<(), Box<dyn Error + 'a>> {
     state.remove_container(id)?;
     fs::remove_dir_all(path_to(id))?;
+    fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())
 }
 

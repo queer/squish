@@ -11,21 +11,39 @@ use std::time::Duration;
 
 use tokio::time::sleep;
 
+const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.10/slirp4netns-x86_64";
+
 pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
     let output_path = "cache/slirp4netns";
     if Path::new(output_path).exists() {
+        info!("slirp4netns binary already exists, not downloading again");
         return Ok(output_path);
     }
+    info!("downloading slirp4netns binary from {}", URL);
     // TODO: Better handling
-    let slirp_bytes = reqwest::get("https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.10/slirp4netns-x86_64").await?.bytes().await?;
+    let slirp_bytes = reqwest::get(URL).await?.bytes().await?;
     let mut output_file = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(&output_path)?;
     output_file.write(&slirp_bytes)?;
     fs::set_permissions(output_path, Permissions::from_mode(0o755))?;
-    eprintln!("{:o}", output_file.metadata()?.permissions().mode());
+    // eprintln!("{:o}", output_file.metadata()?.permissions().mode());
     Ok(output_path)
+}
+
+pub async fn add_port_forward(socket: &String, host: &u16, container: &u16) -> Result<String, Box<dyn Error + Send + Sync>> {
+    slirp_exec(socket, format!(r#"
+        {{
+            "execute": "add_hostfwd",
+            "arguments": {{
+                "proto": "tcp",
+                "host_ip": "127.0.0.1",
+                "host_port": {},
+                "guest_port": {}
+            }}
+        }}
+    "#, host, container).as_str()).await
 }
 
 pub async fn slirp_exec(

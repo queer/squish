@@ -9,13 +9,23 @@ use std::cmp::max;
 use std::error::Error;
 
 use clap::{App, Arg};
+use libsquish::squishfile;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn main() -> Result<(), Box<dyn Error>> {
     let matches = App::new("squish")
         .arg(Arg::new("debug").long("debug").short('d').about(""))
-        .subcommand(App::new("ps"))
-        .subcommand(App::new("create"))
+        .subcommand(App::new("ps").about("List running containers"))
+        .subcommand(
+            App::new("create")
+                .about("Create new containers")
+                .arg(Arg::new("squishfile").required(true)),
+        )
+        .subcommand(
+            App::new("validate")
+                .about("Validate a squishfile")
+                .arg(Arg::new("squishfile").required(true)),
+        )
         .get_matches();
 
     match matches.subcommand_name() {
@@ -47,8 +57,17 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             }
         }
         Some("create") => {
-            let res = client::post("/containers/create").await?;
+            // safe
+            let path = matches.subcommand_matches("create").unwrap().value_of("squishfile").unwrap();
+            let squishfile = squishfile::parse(path)?;
+            let res = client::post("/containers/create", Some(squishfile)).await?;
             println!("got value: {}", res);
+        }
+        Some("validate") => {
+            // safe
+            let path = matches.subcommand_matches("validate").unwrap().value_of("squishfile").unwrap();
+            let _squishfile = squishfile::parse(path)?;
+            println!("ok");
         }
         Some(cmd) => {
             println!("Unknown subcommand '{}'", cmd);

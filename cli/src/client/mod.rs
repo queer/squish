@@ -14,55 +14,60 @@ pub enum Method {
     Delete,
 }
 
-pub async fn get(route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    request(Method::Get, route).await
+pub async fn get(route: &'static str) -> Result<String, Box<dyn Error>> {
+    request::<String>(Method::Get, route, None).await
 }
 
-pub async fn post(route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    request(Method::Post, route).await
-}
-
-#[allow(dead_code)]
-pub async fn put(route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    request(Method::Put, route).await
+pub async fn post<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+    request(Method::Post, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn patch(route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    request(Method::Patch, route).await
+pub async fn put<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+    request(Method::Put, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn delete(route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
-    request(Method::Delete, route).await
+pub async fn patch<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+    request(Method::Patch, route, body).await
 }
 
-pub async fn request(
+#[allow(dead_code)]
+pub async fn delete<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+    request(Method::Delete, route, body).await
+}
+
+pub async fn request<S: Into<String>>(
     method: Method,
     route: &'static str,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+    body: Option<S>
+) -> Result<String, Box<dyn Error>> {
     let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", route).into();
     let client = Client::unix();
+    let body = match body {
+        Some(s) => Body::from(s.into()),
+        None => Body::empty(),
+    };
     let mut response = match method {
         Method::Get => client.get(url).await?,
         Method::Post => {
             client
-                .request(hyper::Request::post(url).body(Body::empty())?)
+                .request(hyper::Request::post(url).body(body)?)
                 .await?
         }
         Method::Put => {
             client
-                .request(hyper::Request::put(url).body(Body::empty())?)
+                .request(hyper::Request::put(url).body(body)?)
                 .await?
         }
         Method::Patch => {
             client
-                .request(hyper::Request::patch(url).body(Body::empty())?)
+                .request(hyper::Request::patch(url).body(body)?)
                 .await?
         }
         Method::Delete => {
             client
-                .request(hyper::Request::delete(url).body(Body::empty())?)
+                .request(hyper::Request::delete(url).body(body)?)
                 .await?
         }
         #[allow(unreachable_patterns)]
