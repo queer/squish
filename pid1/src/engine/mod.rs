@@ -6,10 +6,10 @@ use std::process;
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
-pub fn setup_container(rootfs: &String, container_id: &String) -> Result<(), Box<dyn Error>> {
+pub fn setup_container(rootfs: &String, path: &String, _container_id: &String) -> Result<(), Box<dyn Error>> {
     // TODO: lol error checking
-    let container_path = format!("container/{}/rootfs", &container_id);
-    fs::create_dir_all(&container_path).expect("couldn't create rootfs folder!");
+    let container_path = format!("{}/rootfs", &path);
+    fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
 
     // redirect stdout/err
     let stdout_dup = dup(1).unwrap();
@@ -20,13 +20,13 @@ pub fn setup_container(rootfs: &String, container_id: &String) -> Result<(), Box
     let stdout_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("container/{}/output.log", &container_id))
+        .open(format!("{}/output.log", &path))
         .unwrap();
     let stdout_log_fd = stdout_log.into_raw_fd();
     let stderr_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("container/{}/error.log", &container_id))
+        .open(format!("{}/error.log", &path))
         .unwrap();
     let stderr_log_fd = stderr_log.into_raw_fd();
 

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -103,11 +104,21 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
             let path = format!("/proc/{}", pid.as_raw());
             let path = Path::new(&path);
             if !path.exists() {
-                match container_state.remove_container(id) {
+                match cleanup_container(&mut container_state, id) {
                     Ok(_) => info!("cleaned up dead container {}", pid.as_raw()),
                     Err(e) => error!("error cleaning up dead container {}: {}", pid.as_raw(), e),
                 }
             }
         }
     }
+}
+
+fn cleanup_container<'a>(state: &'a mut ContainerState, id: &'a String) -> Result<(), Box<dyn Error + 'a>> {
+    state.remove_container(id)?;
+    fs::remove_dir_all(path_to(id))?;
+    Ok(())
+}
+
+pub fn path_to(id: &String) -> String {
+    format!("container/{}", id)
 }

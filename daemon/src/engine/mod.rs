@@ -18,6 +18,8 @@ pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + S
             current_rootfs().as_str(),
             "--id",
             id.as_str(),
+            "--path",
+            containers::path_to(&id).as_str(),
         ])
         .output()?;
 

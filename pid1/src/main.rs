@@ -30,17 +30,25 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .required(true)
                 .about("container id"),
         )
+        .arg(
+            Arg::new("path")
+                .long("path")
+                .takes_value(true)
+                .required(true)
+                .about("path to container directory")
+        )
         .get_matches();
 
     let pid = spawn_container(
         matches.value_of("rootfs").unwrap().to_string(),
+        matches.value_of("path").unwrap().to_string(),
         matches.value_of("id").unwrap().to_string(),
     )?;
     println!("{}", pid.as_raw());
     Ok(())
 }
 
-fn spawn_container(rootfs: String, container_id: String) -> Result<nix::unistd::Pid, nix::Error> {
+fn spawn_container(rootfs: String, path: String, container_id: String) -> Result<nix::unistd::Pid, nix::Error> {
     let stack_size = match Resource::STACK.get() {
         Ok((soft, _hard)) => {
             // debug!(
@@ -57,7 +65,7 @@ fn spawn_container(rootfs: String, container_id: String) -> Result<nix::unistd::
     };
 
     let callback = move || {
-        match engine::setup_container(&rootfs, &container_id) {
+        match engine::setup_container(&rootfs, &path, &container_id) {
             Ok(_) => 0,
             _ => 1,
         }
