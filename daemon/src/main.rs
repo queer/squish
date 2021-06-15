@@ -76,7 +76,8 @@ async fn main() {
     panic!("squishd must be run on a unix-like os!");
 }
 
-fn with_state<T: Clone + Send + Sync>(state: T) -> impl Filter<Extract = (T,), Error = std::convert::Infallible> + Clone {
+fn with_state<T: Clone + Send + Sync>(
+    state: T,
+) -> impl Filter<Extract = (T,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || state.clone())
 }
-

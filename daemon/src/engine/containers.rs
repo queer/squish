@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use haikunator::Haikunator;
-use nix::sys::signal::kill;
 use nix::sys::signal;
+use nix::sys::signal::kill;
 use nix::unistd::Pid;
 use tokio::time::sleep;
 
@@ -113,7 +113,10 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     }
 }
 
-fn cleanup_container<'a>(state: &'a mut ContainerState, id: &'a String) -> Result<(), Box<dyn Error + 'a>> {
+fn cleanup_container<'a>(
+    state: &'a mut ContainerState,
+    id: &'a String,
+) -> Result<(), Box<dyn Error + 'a>> {
     state.remove_container(id)?;
     fs::remove_dir_all(path_to(id))?;
     Ok(())

@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::time::SystemTime;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct RunningContainer {
@@ -19,5 +19,7 @@ mod tests {
 }
 
 pub fn now() -> Result<u128, Box<dyn Error>> {
-    Ok(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_millis())
+    Ok(SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_millis())
 }

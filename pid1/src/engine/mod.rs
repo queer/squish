@@ -6,7 +6,11 @@ use std::process;
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
-pub fn setup_container(rootfs: &String, path: &String, _container_id: &String) -> Result<(), Box<dyn Error>> {
+pub fn setup_container(
+    rootfs: &String,
+    path: &String,
+    _container_id: &String,
+) -> Result<(), Box<dyn Error>> {
     // TODO: lol error checking
     let container_path = format!("{}/rootfs", &path);
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
@@ -96,5 +100,8 @@ fn run_in_container() {
     } else {
         println!(">> warning: could not read_dir /");
     }
-    std::process::Command::new("sleep").arg("30").output().unwrap();
+    std::process::Command::new("sleep")
+        .arg("30")
+        .output()
+        .unwrap();
 }

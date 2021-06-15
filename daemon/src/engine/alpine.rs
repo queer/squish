@@ -38,7 +38,7 @@ pub fn base_url() -> String {
 pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
     if Path::new(&current_rootfs_tarball()).exists() {
         info!("rootfs tarball already exists, not downloading again");
-        return Ok(())
+        return Ok(());
     }
     let manifest_url = format!("{}/latest-releases.yaml", base_url());
     debug!("downloading alpine minirootfs from {}", &manifest_url);

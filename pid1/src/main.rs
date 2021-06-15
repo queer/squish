@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .long("path")
                 .takes_value(true)
                 .required(true)
-                .about("path to container directory")
+                .about("path to container directory"),
         )
         .get_matches();
 
@@ -48,7 +48,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn spawn_container(rootfs: String, path: String, container_id: String) -> Result<nix::unistd::Pid, nix::Error> {
+fn spawn_container(
+    rootfs: String,
+    path: String,
+    container_id: String,
+) -> Result<nix::unistd::Pid, nix::Error> {
     let stack_size = match Resource::STACK.get() {
         Ok((soft, _hard)) => {
             // debug!(
@@ -64,11 +68,9 @@ fn spawn_container(rootfs: String, path: String, container_id: String) -> Result
         }
     };
 
-    let callback = move || {
-        match engine::setup_container(&rootfs, &path, &container_id) {
-            Ok(_) => 0,
-            _ => 1,
-        }
+    let callback = move || match engine::setup_container(&rootfs, &path, &container_id) {
+        Ok(_) => 0,
+        _ => 1,
     };
 
     let mut stack_vec = vec![0u8; stack_size];

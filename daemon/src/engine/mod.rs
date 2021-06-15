@@ -48,7 +48,9 @@ pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + S
         slirp.wait_with_output().await.unwrap();
     });
 
-    let add_res = slirp::slirp_exec(&slirp_socket_path, r#"
+    let add_res = slirp::slirp_exec(
+        &slirp_socket_path,
+        r#"
         {
             "execute": "add_hostfwd",
             "arguments": {
@@ -58,14 +60,20 @@ pub async fn spawn_container(id: String) -> Result<(Pid, Pid), Box<dyn Error + S
                 "guest_port": 2000
             }
         }
-    "#).await?;
+    "#,
+    )
+    .await?;
     info!("slirp said: {}", add_res);
 
-    let list_res = slirp::slirp_exec(&slirp_socket_path, r#"
+    let list_res = slirp::slirp_exec(
+        &slirp_socket_path,
+        r#"
         {
             "execute": "list_hostfwd"
         }
-    "#).await?;
+    "#,
+    )
+    .await?;
     info!("slirp said: {}", list_res);
 
     let stderr = String::from_utf8(pid1.stderr).unwrap();

@@ -37,15 +37,34 @@ pub async fn delete(route: &'static str) -> Result<String, Box<dyn Error + Send 
     request(Method::Delete, route).await
 }
 
-pub async fn request(method: Method, route: &'static str) -> Result<String, Box<dyn Error + Send + Sync>> {
+pub async fn request(
+    method: Method,
+    route: &'static str,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
     let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", route).into();
     let client = Client::unix();
     let mut response = match method {
         Method::Get => client.get(url).await?,
-        Method::Post => client.request(hyper::Request::post(url).body(Body::empty())?).await?,
-        Method::Put => client.request(hyper::Request::put(url).body(Body::empty())?).await?,
-        Method::Patch => client.request(hyper::Request::patch(url).body(Body::empty())?).await?,
-        Method::Delete => client.request(hyper::Request::delete(url).body(Body::empty())?).await?,
+        Method::Post => {
+            client
+                .request(hyper::Request::post(url).body(Body::empty())?)
+                .await?
+        }
+        Method::Put => {
+            client
+                .request(hyper::Request::put(url).body(Body::empty())?)
+                .await?
+        }
+        Method::Patch => {
+            client
+                .request(hyper::Request::patch(url).body(Body::empty())?)
+                .await?
+        }
+        Method::Delete => {
+            client
+                .request(hyper::Request::delete(url).body(Body::empty())?)
+                .await?
+        }
         #[allow(unreachable_patterns)]
         _ => panic!("unimplemented method: {:?}", method),
     };
