@@ -10,6 +10,7 @@ mod engine;
 use std::error::Error;
 
 use clap::{App, Arg};
+use libsquish::SimpleCommand;
 use nix::sched::{clone, CloneFlags};
 use rlimit::Resource;
 
@@ -36,12 +37,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .required(true)
                 .about("path to container directory"),
         )
+        .arg(
+            Arg::new("command")
+                .long("command")
+                .takes_value(true)
+                .required(true)
+                .about("command to run"),
+        )
         .get_matches();
 
     let pid = spawn_container(
         matches.value_of("rootfs").unwrap().to_string(),
         matches.value_of("path").unwrap().to_string(),
         matches.value_of("id").unwrap().to_string(),
+        matches.value_of("command").unwrap().to_string(),
     )?;
     println!("{}", pid.as_raw());
     Ok(())
@@ -51,7 +60,8 @@ fn spawn_container(
     rootfs: String,
     path: String,
     container_id: String,
-) -> Result<nix::unistd::Pid, nix::Error> {
+    command: String,
+) -> Result<nix::unistd::Pid, Box<dyn Error>> {
     let stack_size = match Resource::STACK.get() {
         Ok((soft, _hard)) => {
             // debug!(
@@ -67,7 +77,12 @@ fn spawn_container(
         }
     };
 
-    let callback = move || match engine::setup_container(&rootfs, &path, &container_id) {
+    let callback = move || match engine::setup_container(
+        &rootfs,
+        &path,
+        &container_id,
+        SimpleCommand::from_json(command.as_str()).expect("impossible (couldn't deser command!?)"),
+    ) {
         Ok(_) => 0,
         _ => 1,
     };

@@ -684,6 +684,7 @@ version = "0.1.0"
 dependencies = [
  "derive-getters",
  "serde",
+ "serde_json",
  "toml",
 ]
 
@@ -936,6 +937,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "futures",
+ "libsquish",
  "nix",
  "reqwest",
  "rlimit",

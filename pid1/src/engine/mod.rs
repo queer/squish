@@ -3,6 +3,7 @@ use std::fs;
 use std::os::unix::io::IntoRawFd;
 use std::process;
 
+use libsquish::SimpleCommand;
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
@@ -10,6 +11,7 @@ pub fn setup_container(
     rootfs: &String,
     path: &String,
     _container_id: &String,
+    command: SimpleCommand,
 ) -> Result<(), Box<dyn Error>> {
     let container_path = format!("{}/rootfs", &path);
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
@@ -59,7 +61,7 @@ pub fn setup_container(
 
     // TODO: Should totally be blocking on slirp4netns being up here...
 
-    run_in_container();
+    run_in_container(&command);
     println!(">> done!");
     Ok(())
 }
@@ -89,7 +91,7 @@ fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<d
     Ok(())
 }
 
-fn run_in_container() {
+fn run_in_container(command: &SimpleCommand) {
     println!(">> inside the container!");
     println!(">> i am {}", process::id());
 
@@ -101,8 +103,8 @@ fn run_in_container() {
     } else {
         println!(">> warning: could not read_dir /");
     }
-    std::process::Command::new("sleep")
-        .arg("30")
+    std::process::Command::new(command.command())
+        .args(command.args())
         .output()
         .unwrap();
 }

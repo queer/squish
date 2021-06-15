@@ -23,6 +23,7 @@ impl Into<String> for Squishfile {
 #[derive(Deserialize, Serialize, Getters, Debug)]
 pub struct Run {
     command: String,
+    args: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Getters, Debug)]

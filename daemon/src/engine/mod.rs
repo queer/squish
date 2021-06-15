@@ -5,6 +5,7 @@ pub mod slirp;
 use std::error::Error;
 use std::process::{Command, Stdio};
 
+use libsquish::SimpleCommand;
 use libsquish::squishfile::Squishfile;
 use nix::unistd::Pid;
 
@@ -20,6 +21,8 @@ pub async fn spawn_container(
     // TODO: Pass uid and gid to pid1
     // TODO: Pass command to pid1
 
+    let command = SimpleCommand::new((*squishfile.run().command()).clone(), (*squishfile.run().args()).clone());
+
     // TODO: Don't hardcode this plz
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
@@ -29,6 +32,8 @@ pub async fn spawn_container(
             id.as_str(),
             "--path",
             containers::path_to(&id).as_str(),
+            "--command",
+            command.to_json().expect("impossible (couldn't ser command!?)").as_str(),
         ])
         .envs(squishfile.env())
         .output()?;
