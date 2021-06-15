@@ -33,6 +33,9 @@ pub async fn spawn_container(
             "--path",
             containers::path_to(&id).as_str(),
             "--command",
+            // If you're going to get upset about this, just remember:
+            // nftables did it first.
+            // https://manpages.debian.org/testing/libnftables1/libnftables-json.5.en.html
             command.to_json().expect("impossible (couldn't ser command!?)").as_str(),
         ])
         .envs(squishfile.env())
