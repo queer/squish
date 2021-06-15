@@ -58,14 +58,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         Some("create") => {
             // safe
-            let path = matches.subcommand_matches("create").unwrap().value_of("squishfile").unwrap();
+            let path = matches
+                .subcommand_matches("create")
+                .ok_or("impossible")?
+                .value_of("squishfile")
+                .ok_or("impossible")?;
             let squishfile = squishfile::parse(path)?;
             let res = client::post("/containers/create", Some(squishfile)).await?;
             println!("got value: {}", res);
         }
         Some("validate") => {
             // safe
-            let path = matches.subcommand_matches("validate").unwrap().value_of("squishfile").unwrap();
+            let path = matches
+                .subcommand_matches("validate")
+                .ok_or("impossible")?
+                .value_of("squishfile")
+                .ok_or("impossible")?;
             let _squishfile = squishfile::parse(path)?;
             println!("ok");
         }

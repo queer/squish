@@ -32,8 +32,15 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
     Ok(output_path)
 }
 
-pub async fn add_port_forward(socket: &String, host: &u16, container: &u16) -> Result<String, Box<dyn Error + Send + Sync>> {
-    slirp_exec(socket, format!(r#"
+pub async fn add_port_forward(
+    socket: &String,
+    host: &u16,
+    container: &u16,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
+    slirp_exec(
+        socket,
+        format!(
+            r#"
         {{
             "execute": "add_hostfwd",
             "arguments": {{
@@ -43,7 +50,12 @@ pub async fn add_port_forward(socket: &String, host: &u16, container: &u16) -> R
                 "guest_port": {}
             }}
         }}
-    "#, host, container).as_str()).await
+    "#,
+            host, container
+        )
+        .as_str(),
+    )
+    .await
 }
 
 pub async fn slirp_exec(

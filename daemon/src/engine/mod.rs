@@ -11,7 +11,10 @@ use nix::unistd::Pid;
 use crate::engine::alpine::current_rootfs;
 
 /// (container pid, slirp pid)
-pub async fn spawn_container(id: &String, squishfile: Squishfile) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
+pub async fn spawn_container(
+    id: &String,
+    squishfile: Squishfile,
+) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
     // TODO: Pass uid and gid to pid1
@@ -57,7 +60,12 @@ pub async fn spawn_container(id: &String, squishfile: Squishfile) -> Result<(Pid
 
     for port in squishfile.ports() {
         slirp::add_port_forward(&slirp_socket_path, port.host(), port.container()).await?;
-        info!("{}: added port forward: {} -> {}", &id, port.host(), port.container());
+        info!(
+            "{}: added port forward: {} -> {}",
+            &id,
+            port.host(),
+            port.container()
+        );
     }
 
     let stderr = String::from_utf8(pid1.stderr).unwrap();

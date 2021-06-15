@@ -21,8 +21,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use libsquish::squishfile;
-use warp::Filter;
 use warp::hyper::body::Bytes;
+use warp::Filter;
 
 mod engine;
 mod handlers;
@@ -59,6 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             for byte in bytes.iter() {
                 vec.push(*byte);
             }
+            // TODO: Better error handling(?)
             let body = String::from_utf8(vec).expect("squishfile not valid string");
             squishfile::parse_str(&*body).expect("squishfile invalid")
         }))

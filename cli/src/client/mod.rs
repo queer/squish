@@ -18,29 +18,41 @@ pub async fn get(route: &'static str) -> Result<String, Box<dyn Error>> {
     request::<String>(Method::Get, route, None).await
 }
 
-pub async fn post<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+pub async fn post<S: Into<String>>(
+    route: &'static str,
+    body: Option<S>,
+) -> Result<String, Box<dyn Error>> {
     request(Method::Post, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn put<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+pub async fn put<S: Into<String>>(
+    route: &'static str,
+    body: Option<S>,
+) -> Result<String, Box<dyn Error>> {
     request(Method::Put, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn patch<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+pub async fn patch<S: Into<String>>(
+    route: &'static str,
+    body: Option<S>,
+) -> Result<String, Box<dyn Error>> {
     request(Method::Patch, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn delete<S: Into<String>>(route: &'static str, body: Option<S>) -> Result<String, Box<dyn Error>> {
+pub async fn delete<S: Into<String>>(
+    route: &'static str,
+    body: Option<S>,
+) -> Result<String, Box<dyn Error>> {
     request(Method::Delete, route, body).await
 }
 
 pub async fn request<S: Into<String>>(
     method: Method,
     route: &'static str,
-    body: Option<S>
+    body: Option<S>,
 ) -> Result<String, Box<dyn Error>> {
     let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", route).into();
     let client = Client::unix();
@@ -55,11 +67,7 @@ pub async fn request<S: Into<String>>(
                 .request(hyper::Request::post(url).body(body)?)
                 .await?
         }
-        Method::Put => {
-            client
-                .request(hyper::Request::put(url).body(body)?)
-                .await?
-        }
+        Method::Put => client.request(hyper::Request::put(url).body(body)?).await?,
         Method::Patch => {
             client
                 .request(hyper::Request::patch(url).body(body)?)

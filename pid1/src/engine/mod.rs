@@ -41,7 +41,11 @@ pub fn setup_container(
     close(stderr_dup).unwrap();
 
     // Bindmount rootfs ro
-    bind_mount(&rootfs, &container_path, MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID)?;
+    bind_mount(
+        &rootfs,
+        &container_path,
+        MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
+    )?;
 
     // Bind-mount *nix stuff in
     println!(">> bindmounting devices");

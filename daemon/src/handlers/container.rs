@@ -25,7 +25,9 @@ pub async fn create_container(
     );
     // Can't lock before .await
     let mut container_state = state.lock().unwrap();
-    container_state.add_container(container_pid, slirp_pid, id, name).unwrap();
+    container_state
+        .add_container(container_pid, slirp_pid, id, name)
+        .unwrap();
     let res = "{\"status\":\"ok\"}".to_string();
     Ok(warp::reply::json(&res))
 }
