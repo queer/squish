@@ -16,29 +16,27 @@ pub fn setup_container(
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
 
     // redirect stdout/err
-    let stdout_dup = dup(1).unwrap();
-    let stderr_dup = dup(2).unwrap();
-    close(1).unwrap();
-    close(2).unwrap();
+    let stdout_dup = dup(1)?;
+    let stderr_dup = dup(2)?;
+    close(1)?;
+    close(2)?;
 
     let stdout_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("{}/output.log", &path))
-        .unwrap();
+        .open(format!("{}/output.log", &path))?;
     let stdout_log_fd = stdout_log.into_raw_fd();
     let stderr_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("{}/error.log", &path))
-        .unwrap();
+        .open(format!("{}/error.log", &path))?;
     let stderr_log_fd = stderr_log.into_raw_fd();
 
     // TODO: Lol buffering
-    dup2(stdout_log_fd, stdout_dup).unwrap();
-    dup2(stderr_log_fd, stderr_dup).unwrap();
-    close(stdout_dup).unwrap();
-    close(stderr_dup).unwrap();
+    dup2(stdout_log_fd, stdout_dup)?;
+    dup2(stderr_log_fd, stderr_dup)?;
+    close(stdout_dup)?;
+    close(stderr_dup)?;
 
     // Bindmount rootfs ro
     bind_mount(
