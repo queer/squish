@@ -11,7 +11,6 @@ use std::error::Error;
 
 use clap::{App, Arg};
 use nix::sched::{clone, CloneFlags};
-use nix::sys::signal::Signal;
 use rlimit::Resource;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -84,8 +83,7 @@ fn spawn_container(
             | CloneFlags::CLONE_NEWNS
             | CloneFlags::CLONE_NEWNET
             | CloneFlags::CLONE_NEWUSER,
-        // TODO: Better way?
-        Some(Signal::SIGCHLD as i32),
+        None,
     )
     .unwrap();
     if (pid.as_raw() as i32) == -1 {

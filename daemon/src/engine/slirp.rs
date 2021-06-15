@@ -20,7 +20,7 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
         return Ok(output_path);
     }
     info!("downloading slirp4netns binary from {}", URL);
-    // TODO: Better handling
+    // TODO: Refactor this to reuse code from alpine / layers where possible
     let slirp_bytes = reqwest::get(URL).await?.bytes().await?;
     let mut output_file = fs::OpenOptions::new()
         .write(true)

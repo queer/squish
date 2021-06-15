@@ -11,7 +11,6 @@ pub fn setup_container(
     path: &String,
     _container_id: &String,
 ) -> Result<(), Box<dyn Error>> {
-    // TODO: lol error checking
     let container_path = format!("{}/rootfs", &path);
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
 
@@ -32,7 +31,6 @@ pub fn setup_container(
         .open(format!("{}/error.log", &path))?;
     let stderr_log_fd = stderr_log.into_raw_fd();
 
-    // TODO: Lol buffering
     dup2(stdout_log_fd, stdout_dup)?;
     dup2(stderr_log_fd, stderr_dup)?;
     close(stdout_dup)?;
