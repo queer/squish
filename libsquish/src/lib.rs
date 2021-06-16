@@ -22,10 +22,7 @@ pub struct SimpleCommand {
 
 impl SimpleCommand {
     pub fn new(command: String, args: Vec<String>) -> Self {
-        Self {
-            command,
-            args,
-        }
+        Self { command, args }
     }
 
     pub fn to_json(&self) -> Result<String, Box<dyn Error>> {
@@ -52,5 +49,8 @@ pub fn now() -> Result<u128, Box<dyn Error>> {
 }
 
 pub fn err<T, S: Into<String>>(reason: S) -> Result<T, Box<dyn Error>> {
-    Err(Box::new(std::io::Error::new(ErrorKind::Other, reason.into())))
+    Err(Box::new(std::io::Error::new(
+        ErrorKind::Other,
+        reason.into(),
+    )))
 }

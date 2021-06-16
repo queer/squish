@@ -5,8 +5,8 @@ pub mod slirp;
 use std::error::Error;
 use std::process::{Command, Stdio};
 
-use libsquish::SimpleCommand;
 use libsquish::squishfile::Squishfile;
+use libsquish::SimpleCommand;
 use nix::unistd::Pid;
 
 use crate::engine::alpine::current_rootfs;
@@ -19,7 +19,10 @@ pub async fn spawn_container(
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
 
-    let command = SimpleCommand::new((*squishfile.run().command()).clone(), (*squishfile.run().args()).clone());
+    let command = SimpleCommand::new(
+        (*squishfile.run().command()).clone(),
+        (*squishfile.run().args()).clone(),
+    );
 
     // TODO: Don't hardcode this plz
     let pid1 = Command::new("target/debug/pid1")
@@ -34,7 +37,10 @@ pub async fn spawn_container(
             // If you're going to get upset about this, just remember:
             // nftables did it first.
             // https://manpages.debian.org/testing/libnftables1/libnftables-json.5.en.html
-            command.to_json().expect("impossible (couldn't ser command!?)").as_str(),
+            command
+                .to_json()
+                .expect("impossible (couldn't ser command!?)")
+                .as_str(),
         ])
         .envs(squishfile.env())
         .output()?;
