@@ -4,7 +4,7 @@ python = "3.9" # Support more ways of choosing versions? (ex. ~3.9 gives any 3.9
 app = "./my-app.tar.gz" # Tarballs, zips, etc. should be automatically detected and extracted (ideally hash+cache?)
 
 [run]
-# command = "/sdks/python/bin/python"
+# command = "/sdk/python/bin/python"
 # args = ["/app/main.py", "--flag", "--other-flag=whatever"]
 command = "sleep"
 args = [ "5" ]

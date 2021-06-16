@@ -18,8 +18,6 @@ pub async fn spawn_container(
 ) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
-    // TODO: Pass uid and gid to pid1
-    // TODO: Pass command to pid1
 
     let command = SimpleCommand::new((*squishfile.run().command()).clone(), (*squishfile.run().args()).clone());
 
