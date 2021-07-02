@@ -28,3 +28,18 @@ read-only.
 - Persistence, lol
 - Any sort of volumes
 - Inter-container networking
+
+## Layers and binaries and images and whatnot
+
+squish doesn't have OCI-style container images. Since what actually runs is a
+bunch of bind-mounted-together SDKs, your "image" that you push is just a
+binary (or tarball, or ...) that has an accompanying `layerfile.toml`. The
+`layerfile` is just a manifest of layers that are to be used at runtime, and
+optionally a run-specification of what command to run by default. When actually
+running a container, you specify its layer name + tag in your `squishfile.toml`
+-- and optionally any other layers you want pulled -- as well as optional run +
+env + port sections -- and the daemon can put all of it together to figure out
+what layers are needed and what command to run. This may seem a bit
+counter-intuitive at first, but it's useful for ex. adding a custom `debug`
+layer to containers at creation time, ensuring you have the same tools present
+in a container no matter what source layers make it up..;
