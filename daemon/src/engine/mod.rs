@@ -19,6 +19,7 @@ pub async fn spawn_container(
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
 
+    // TODO: Determine this correctly
     let run = squishfile.run().as_ref().unwrap();
     let command = SimpleCommand::new(
         run.command().clone(),
