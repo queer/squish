@@ -8,15 +8,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Getters, Debug)]
 pub struct Squishfile {
-    run: Option<Run>,
+    run: Run,
+    layers: HashMap<String, String>, // TODO: <String, Version>
     env: HashMap<String, String>,
     ports: Vec<Port>,
-}
-
-#[derive(Deserialize, Serialize, Getters, Debug)]
-pub struct Layerfile {
-    layers: HashMap<String, String>, // TODO: <String, Version>
-    run: Run,
 }
 
 impl Into<String> for Squishfile {

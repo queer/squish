@@ -43,3 +43,7 @@ what layers are needed and what command to run. This may seem a bit
 counter-intuitive at first, but it's useful for ex. adding a custom `debug`
 layer to containers at creation time, ensuring you have the same tools present
 in a container no matter what source layers make it up..;
+
+## Misc
+
+`http-asm`: https://github.com/poletaevvlad/http-asm

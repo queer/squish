@@ -19,18 +19,14 @@ pub async fn spawn_container(
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
 
-    // TODO: Determine this correctly
-    let run = squishfile.run().as_ref().unwrap();
-    let command = SimpleCommand::new(
-        run.command().clone(),
-        run.args().clone(),
-    );
+    let run = squishfile.run();
+    let command = SimpleCommand::new(run.command().clone(), run.args().clone());
 
     // TODO: Don't hardcode this plz
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
-            current_rootfs().as_str(),
+            current_rootfs().as_str(), // TODO: Allow just not having a rootfs
             "--id",
             id.as_str(),
             "--path",

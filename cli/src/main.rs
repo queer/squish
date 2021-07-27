@@ -64,6 +64,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .value_of("squishfile")
                 .ok_or("impossible")?;
             let squishfile = squishfile::parse(path)?;
+            // TODO: Resolve local squishfile paths to absolute paths before sending to the server
             let res = client::post("/containers/create", Some(squishfile)).await?;
             println!("got value: {}", res);
         }
