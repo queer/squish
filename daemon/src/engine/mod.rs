@@ -19,7 +19,7 @@ pub async fn spawn_container(
     // TODO: Pass layer names + paths to pid1
 
     // TODO: Don't hardcode this plz
-    debug!("pid1 setup");
+    debug!("{}: pid1 setup", &id);
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
@@ -41,12 +41,12 @@ pub async fn spawn_container(
         .output()?;
 
     let stderr = String::from_utf8(pid1.stderr).unwrap();
-    info!("{}: container spawn stderr:\n{}", &id, stderr);
+    debug!("{}: container spawn stderr:\n{}", &id, stderr);
 
     let stdout = String::from_utf8(pid1.stdout).unwrap();
     let child_pid = stdout.trim().parse::<i32>()?;
 
-    debug!("slirp4netns setup");
+    debug!("{}: slirp4netns setup", &id);
     let slirp_socket_path = format!("/tmp/slirp4netns-{}.sock", &id);
     let slirp = tokio::process::Command::new("cache/slirp4netns")
         .args(vec![
@@ -66,14 +66,14 @@ pub async fn spawn_container(
     let slirp_pid = slirp.id().expect("no slirp4netns pid!?") as i32;
 
     tokio::spawn(async move {
-        debug!("await slirp4netns exit");
-        let output = slirp.wait_with_output().await.unwrap();
-        let stdout = String::from_utf8(output.stdout).unwrap();
-        let stderr = String::from_utf8(output.stderr).unwrap();
-        debug!("s4nns exit: {}:\n--------\nstdout:\n{}\n--------\nstderr:\n{}\n--------", output.status, stdout, stderr);
+        // debug!("{}: await slirp4netns exit", &id);
+        let _output = slirp.wait_with_output().await.unwrap();
+        // let stdout = String::from_utf8(output.stdout).unwrap();
+        // let stderr = String::from_utf8(output.stderr).unwrap();
+        // debug!("{}: s4nns exit: {}:\n--------\nstdout:\n{}\n--------\nstderr:\n{}\n--------", &id, output.status, stdout, stderr);
     });
 
-    info!("port forward setup");
+    info!("{}: port forward setup", &id);
     for port in squishfile.ports() {
         slirp::add_port_forward(&slirp_socket_path, port.host(), port.container()).await?;
         info!(
