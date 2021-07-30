@@ -56,10 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(warp::post())
         .and(with_state(global_state.clone()))
         .and(warp::body::bytes().map(|bytes: Bytes| {
-            let mut vec: Vec<u8> = vec![];
-            for byte in bytes.iter() {
-                vec.push(*byte);
-            }
+            let vec: Vec<u8> = bytes.to_vec();
             // TODO: Better error handling(?)
             let body = String::from_utf8(vec).expect("squishfile not valid string");
             squishfile::parse_str(&*body).expect("squishfile invalid")
