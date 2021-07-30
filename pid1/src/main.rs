@@ -10,7 +10,7 @@ mod engine;
 use std::error::Error;
 
 use clap::{App, Arg};
-use libsquish::SimpleCommand;
+use libsquish::squishfile::Squishfile;
 use nix::sched::{clone, CloneFlags};
 use rlimit::Resource;
 
@@ -38,11 +38,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .about("path to container directory"),
         )
         .arg(
-            Arg::new("command")
-                .long("command")
+            Arg::new("squishfile")
+                .long("squishfile")
                 .takes_value(true)
                 .required(true)
-                .about("command to run"),
+                .about("squishfile to run"),
         )
         .get_matches();
 
@@ -50,7 +50,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         matches.value_of("rootfs").unwrap().to_string(),
         matches.value_of("path").unwrap().to_string(),
         matches.value_of("id").unwrap().to_string(),
-        matches.value_of("command").unwrap().to_string(),
+        Squishfile::from_json(matches.value_of("squishfile").unwrap().to_string().as_str())
+            .expect("impossible (couldn't deser squishfile)!?"),
     )?;
     println!("{}", pid.as_raw());
     Ok(())
@@ -60,7 +61,7 @@ fn spawn_container(
     rootfs: String,
     path: String,
     container_id: String,
-    command: String,
+    squishfile: Squishfile,
 ) -> Result<nix::unistd::Pid, Box<dyn Error>> {
     let stack_size = match Resource::STACK.get() {
         Ok((soft, _hard)) => {
@@ -77,15 +78,11 @@ fn spawn_container(
         }
     };
 
-    let callback = move || match engine::setup_container(
-        &rootfs,
-        &path,
-        &container_id,
-        SimpleCommand::from_json(command.as_str()).expect("impossible (couldn't deser command!?)"),
-    ) {
-        Ok(_) => 0,
-        _ => 1,
-    };
+    let callback =
+        move || match engine::setup_and_run_container(&rootfs, &path, &container_id, &squishfile) {
+            Ok(_) => 0,
+            _ => 1,
+        };
 
     let mut stack_vec = vec![0u8; stack_size];
     let stack: &mut [u8] = stack_vec.as_mut_slice();

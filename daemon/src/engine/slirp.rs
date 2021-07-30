@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use tokio::time::sleep;
 
-const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.10/slirp4netns-x86_64";
+const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.11/slirp4netns-x86_64";
 
 pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
     let output_path = "cache/slirp4netns";

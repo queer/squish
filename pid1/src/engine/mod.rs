@@ -1,17 +1,18 @@
 use std::error::Error;
-use std::fs;
+use std::fs::{self, OpenOptions};
 use std::os::unix::io::IntoRawFd;
+use std::path::Path;
 use std::process;
 
-use libsquish::SimpleCommand;
+use libsquish::squishfile::Squishfile;
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
-pub fn setup_container(
+pub fn setup_and_run_container(
     rootfs: &String,
     path: &String,
     _container_id: &String,
-    command: SimpleCommand,
+    squishfile: &Squishfile,
 ) -> Result<(), Box<dyn Error>> {
     let container_path = format!("{}/rootfs", &path);
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
@@ -39,6 +40,7 @@ pub fn setup_container(
     close(stderr_dup)?;
 
     // Bindmount rootfs ro
+    // TODO: Determine rootfs from squishfile versions
     bind_mount(
         &rootfs,
         &container_path,
@@ -54,6 +56,29 @@ pub fn setup_container(
     println!(">> bindmounting devices finished!");
 
     // TODO: User-defined bindmounts
+    // TODO: Bindmount SDK layers
+
+    // Bindmount app
+    let app = squishfile
+        .layers()
+        .get("app")
+        .expect("squishfile has no app layer!?");
+    let app_file_name = Path::new(app)
+        .file_name()
+        .expect("squishfile app has no filename!?")
+        .to_str()
+        .expect("Couldn't convert filename to string!?")
+        .to_string();
+    // TODO: This should handle automatic extraction of tarballs / zips
+    println!(">> bindmounting app");
+    let app_bind_path = &format!("{}/app/{}", container_path, app_file_name);
+    touch(&app_bind_path)?;
+    bind_mount(
+        app,
+        app_bind_path,
+        MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
+    )?;
+    println!(">> bindmounting app finished!");
 
     // chroot!
     chroot(container_path.as_str()).expect("couldn't chroot!?");
@@ -61,7 +86,7 @@ pub fn setup_container(
 
     // TODO: Should totally be blocking on slirp4netns being up here...
 
-    run_in_container(&command);
+    run_in_container(&squishfile);
     println!(">> done!");
     Ok(())
 }
@@ -91,7 +116,14 @@ fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<d
     Ok(())
 }
 
-fn run_in_container(command: &SimpleCommand) {
+fn touch(path: &String) -> Result<(), Box<dyn Error>> {
+    match OpenOptions::new().create(true).write(true).open(path) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Box::new(e)),
+    }
+}
+
+fn run_in_container(squishfile: &Squishfile) {
     println!(">> inside the container!");
     println!(">> i am {}", process::id());
 
@@ -103,8 +135,8 @@ fn run_in_container(command: &SimpleCommand) {
     } else {
         println!(">> warning: could not read_dir /");
     }
-    std::process::Command::new(command.command())
-        .args(command.args())
+    std::process::Command::new(squishfile.run().command())
+        .args(squishfile.run().args())
         .output()
         .unwrap();
 }

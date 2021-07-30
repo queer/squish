@@ -1,6 +1,6 @@
 [layers]
 alpine = "3.14" # If not specified, uses squishd's latest-known-version
-python = "3.9" # Support more ways of choosing versions? (ex. ~3.9 gives any 3.9.x or some shit)
+# python = "3.9" # Support more ways of choosing versions? (ex. ~3.9 gives any 3.9.x or some shit)
 app = "./http-asm" # Tarballs, zips, etc. should be automatically detected and extracted (ideally hash+cache?)
 
 [run]

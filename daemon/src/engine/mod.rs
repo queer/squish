@@ -6,7 +6,6 @@ use std::error::Error;
 use std::process::{Command, Stdio};
 
 use libsquish::squishfile::Squishfile;
-use libsquish::SimpleCommand;
 use nix::unistd::Pid;
 
 use crate::engine::alpine::current_rootfs;
@@ -19,10 +18,8 @@ pub async fn spawn_container(
     // TODO: Ensure layers are cached
     // TODO: Pass layer names + paths to pid1
 
-    let run = squishfile.run();
-    let command = SimpleCommand::new(run.command().clone(), run.args().clone());
-
     // TODO: Don't hardcode this plz
+    debug!("pid1 setup");
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
@@ -31,11 +28,11 @@ pub async fn spawn_container(
             id.as_str(),
             "--path",
             containers::path_to(&id).as_str(),
-            "--command",
+            "--squishfile",
             // If you're going to get upset about this, just remember:
             // nftables did it first.
             // https://manpages.debian.org/testing/libnftables1/libnftables-json.5.en.html
-            command
+            squishfile
                 .to_json()
                 .expect("impossible (couldn't ser command!?)")
                 .as_str(),
@@ -43,9 +40,13 @@ pub async fn spawn_container(
         .envs(squishfile.env())
         .output()?;
 
+    let stderr = String::from_utf8(pid1.stderr).unwrap();
+    info!("{}: container spawn stderr:\n{}", &id, stderr);
+
     let stdout = String::from_utf8(pid1.stdout).unwrap();
     let child_pid = stdout.trim().parse::<i32>()?;
 
+    debug!("slirp4netns setup");
     let slirp_socket_path = format!("/tmp/slirp4netns-{}.sock", &id);
     let slirp = tokio::process::Command::new("cache/slirp4netns")
         .args(vec![
@@ -65,9 +66,14 @@ pub async fn spawn_container(
     let slirp_pid = slirp.id().expect("no slirp4netns pid!?") as i32;
 
     tokio::spawn(async move {
-        slirp.wait_with_output().await.unwrap();
+        debug!("await slirp4netns exit");
+        let output = slirp.wait_with_output().await.unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        debug!("s4nns exit: {}:\n--------\nstdout:\n{}\n--------\nstderr:\n{}\n--------", output.status, stdout, stderr);
     });
 
+    info!("port forward setup");
     for port in squishfile.ports() {
         slirp::add_port_forward(&slirp_socket_path, port.host(), port.container()).await?;
         info!(
@@ -77,9 +83,6 @@ pub async fn spawn_container(
             port.container()
         );
     }
-
-    let stderr = String::from_utf8(pid1.stderr).unwrap();
-    info!("{}: container spawn stderr:\n{}", &id, stderr);
 
     Ok((Pid::from_raw(child_pid), Pid::from_raw(slirp_pid)))
 }

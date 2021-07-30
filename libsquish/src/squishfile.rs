@@ -14,6 +14,37 @@ pub struct Squishfile {
     ports: Vec<Port>,
 }
 
+impl Squishfile {
+    fn update_layer(&mut self, layer: &String, new_data: &String) {
+        self.layers.insert(layer.to_string(), new_data.to_string());
+    }
+
+    pub fn resolve_paths(&mut self) {
+        let resolved: Vec<(String, String)> = self
+            .layers
+            .iter()
+            .filter(|(_k, v)| v.starts_with("./")) // TODO: Handle other relative paths
+            .map(|(k, v)| {
+                let path = fs::canonicalize(v).unwrap(); // TODO: Handle this panic
+                (
+                    k.clone(),
+                    path.to_str().expect("no string from path!?").to_string(),
+                )
+            })
+            .collect();
+
+        resolved.iter().for_each(|(k, v)| self.update_layer(k, v));
+    }
+
+    pub fn to_json(&self) -> Result<String, Box<dyn Error>> {
+        serde_json::to_string(&self).map_err(|e| e.into())
+    }
+
+    pub fn from_json<'a, S: Into<&'a str>>(json: S) -> Result<Self, Box<dyn Error>> {
+        serde_json::from_str(json.into()).map_err(|e| e.into())
+    }
+}
+
 impl Into<String> for Squishfile {
     fn into(self) -> String {
         toml::to_string(&self).expect(format!("unable to serialise config: {:?}", self).as_str())
