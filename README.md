@@ -41,6 +41,13 @@ counter-intuitive at first, but it's useful for ex. adding a custom `debug`
 layer to containers at creation time, ensuring you have the same tools present
 in a container no matter what source layers make it up.
 
+## Where did the name come from?
+
+The idea started out as making something like [Flatpak](https://flatpak.org/)
+for servers -- although squish has significantly diverged since then -- and so
+the original working name was "squishpak," which eventually shortened into
+"squish."
+
 ## Misc
 
 `http-asm`: https://github.com/poletaevvlad/http-asm
