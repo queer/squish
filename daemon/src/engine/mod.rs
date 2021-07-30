@@ -73,10 +73,10 @@ pub async fn spawn_container(
         // debug!("{}: s4nns exit: {}:\n--------\nstdout:\n{}\n--------\nstderr:\n{}\n--------", &id, output.status, stdout, stderr);
     });
 
-    info!("{}: port forward setup", &id);
+    debug!("{}: port forward setup", &id);
     for port in squishfile.ports() {
         slirp::add_port_forward(&slirp_socket_path, port.host(), port.container()).await?;
-        info!(
+        debug!(
             "{}: added port forward: {} -> {}",
             &id,
             port.host(),
