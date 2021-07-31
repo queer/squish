@@ -8,6 +8,7 @@ extern crate tokio;
 mod engine;
 
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::Read;
 
@@ -49,9 +50,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_matches();
 
     let squishfile_path = matches.value_of("squishfile").unwrap().to_string();
-    let mut squishfile_json = File::open(squishfile_path)?;
+    let mut squishfile_json = File::open(&squishfile_path)?;
     let mut squishfile = String::new();
     squishfile_json.read_to_string(&mut squishfile)?;
+    fs::remove_file(&squishfile_path)?;
 
     let pid = spawn_container(
         matches.value_of("rootfs").unwrap().to_string(),
