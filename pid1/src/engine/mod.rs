@@ -63,7 +63,7 @@ pub fn setup_and_run_container(
         .layers()
         .get("app")
         .expect("squishfile has no app layer!?");
-    let app_file_name = Path::new(app)
+    let app_file_name = Path::new(app.path().as_ref().unwrap())
         .file_name()
         .expect("squishfile app has no filename!?")
         .to_str()
@@ -74,7 +74,7 @@ pub fn setup_and_run_container(
     let app_bind_path = &format!("{}/app/{}", container_path, app_file_name);
     touch(&app_bind_path)?;
     bind_mount(
-        app,
+        app.path().as_ref().unwrap(),
         app_bind_path,
         MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
     )?;
