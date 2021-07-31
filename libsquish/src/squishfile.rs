@@ -23,13 +23,15 @@ impl Squishfile {
         let resolved: Vec<(String, String)> = self
             .layers
             .iter()
-            .filter(|(_k, v)| v.starts_with("./")) // TODO: Handle other relative paths
+            .filter(|(_k, v)| v.starts_with("./") || v.starts_with("../"))
             .map(|(k, v)| {
-                let path = fs::canonicalize(v).unwrap(); // TODO: Handle this panic
-                (
-                    k.clone(),
-                    path.to_str().expect("no string from path!?").to_string(),
-                )
+                match fs::canonicalize(v) {
+                    Ok(path) => {
+                        let path = path.as_path().display().to_string();
+                        (k.clone(), path)
+                    },
+                    Err(e) => panic!("squishfile: error resolving relative path: {}", e),
+                }
             })
             .collect();
 
