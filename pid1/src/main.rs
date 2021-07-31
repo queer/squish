@@ -8,6 +8,8 @@ extern crate tokio;
 mod engine;
 
 use std::error::Error;
+use std::fs::File;
+use std::io::Read;
 
 use clap::{App, Arg};
 use libsquish::squishfile::Squishfile;
@@ -46,11 +48,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         )
         .get_matches();
 
+    let squishfile_path = matches.value_of("squishfile").unwrap().to_string();
+    let mut squishfile_json = File::open(squishfile_path)?;
+    let mut squishfile = String::new();
+    squishfile_json.read_to_string(&mut squishfile)?;
+
     let pid = spawn_container(
         matches.value_of("rootfs").unwrap().to_string(),
         matches.value_of("path").unwrap().to_string(),
         matches.value_of("id").unwrap().to_string(),
-        Squishfile::from_json(matches.value_of("squishfile").unwrap().to_string().as_str())
+        Squishfile::from_json(squishfile.as_str())
             .expect("impossible (couldn't deser squishfile)!?"),
     )?;
     println!("{}", pid.as_raw());

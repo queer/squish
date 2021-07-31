@@ -3,6 +3,8 @@ pub mod containers;
 pub mod slirp;
 
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
 use std::process::{Command, Stdio};
 
 use libsquish::squishfile::Squishfile;
@@ -16,10 +18,19 @@ pub async fn spawn_container(
     squishfile: Squishfile,
 ) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
-    // TODO: Pass layer names + paths to pid1
 
-    // TODO: Don't hardcode this plz
+    // Write squishfile into /tmp to avoid leaking it to `ps`
+    let temp_path = format!("/tmp/{}.squishfile.toml", id);
+    let mut file = File::create(&temp_path)?;
+    file.write_all(
+        squishfile
+            .to_json()
+            .expect("impossible (couldn't ser squishfile!?)")
+            .as_bytes(),
+    )?;
+
     debug!("{}: pid1 setup", &id);
+    // TODO: Don't hardcode this plz
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
@@ -32,10 +43,7 @@ pub async fn spawn_container(
             // If you're going to get upset about this, just remember:
             // nftables did it first.
             // https://manpages.debian.org/testing/libnftables1/libnftables-json.5.en.html
-            squishfile
-                .to_json()
-                .expect("impossible (couldn't ser command!?)")
-                .as_str(),
+            temp_path.as_str(),
         ])
         .envs(squishfile.env())
         .output()?;

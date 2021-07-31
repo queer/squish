@@ -23,15 +23,15 @@ impl Squishfile {
         let resolved: Vec<(String, String)> = self
             .layers
             .iter()
+            // Easiest way to detect local paths -- generic labels means we
+            // can't resolve every possible path
             .filter(|(_k, v)| v.starts_with("./") || v.starts_with("../"))
-            .map(|(k, v)| {
-                match fs::canonicalize(v) {
-                    Ok(path) => {
-                        let path = path.as_path().display().to_string();
-                        (k.clone(), path)
-                    },
-                    Err(e) => panic!("squishfile: error resolving relative path: {}", e),
+            .map(|(k, v)| match fs::canonicalize(v) {
+                Ok(path) => {
+                    let path = path.as_path().display().to_string();
+                    (k.clone(), path)
                 }
+                Err(e) => panic!("squishfile: error resolving relative path: {}", e),
             })
             .collect();
 
