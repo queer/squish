@@ -55,8 +55,63 @@ pub fn setup_and_run_container(
     bind_mount_dev("/dev/urandom", &format!("{}/dev/urandom", container_path))?;
     println!(">> bindmounting devices finished!");
 
-    // TODO: User-defined bindmounts
-    // TODO: Bindmount SDK layers
+    for (layer_name, layer) in squishfile.layers() {
+        if layer_name != "alpine" && layer_name != "app" {
+            // Bind-mount squishfile layers
+            println!(">> bindmounting {:?} => {:?}", layer.path(), layer.target());
+            if layer.path().is_none() && layer.version().is_none() {
+                panic!("squishfile: nothing to mount for layer {}!?", layer_name);
+            }
+            let target = match layer.target() {
+                Some(target) => target.clone(),
+                None => {
+                    if layer.path().is_some() {
+                        let target = layer
+                            .path()
+                            .as_ref()
+                            .unwrap()
+                            .replace("../", "")
+                            .replace("./", "");
+                        format!("/app/{}", target)
+                    } else if layer.version().is_none() {
+                        panic!("squishfile no path or version for layer {}", layer_name);
+                    } else {
+                        // TODO
+                        todo!("mounting squish layer at path");
+                    }
+                }
+            };
+            let target = format!("{}/{}", container_path, target);
+            if layer.path().is_none() && layer.version().is_some() && layer.target().is_none() {
+                // TODO
+                todo!("mounting squish layer normally");
+            }
+            let path = layer.path().as_ref().unwrap();
+            let mount_path = Path::new(path);
+            // Yeah this is technically racy, but literally who cares?
+            if mount_path.exists() {
+                let meta = fs::metadata(path)?;
+                if meta.is_dir() {
+                    touch_dir(&target)?;
+                } else if meta.is_file() {
+                    let target_path = Path::new(&target);
+                    // TODO: Do this better
+                    let parent = target_path.parent().unwrap().to_str().unwrap().to_string();
+                    touch_dir(&parent)?;
+                    touch(&target)?;
+                } else {
+                    println!(">> mount is not a directory or file");
+                }
+                bind_mount(
+                    path,
+                    &target,
+                    MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
+                )?;
+            } else {
+                println!(">> mount didn't exist")
+            }
+        }
+    }
 
     // Bindmount app
     let app = squishfile
@@ -118,6 +173,13 @@ fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<d
 
 fn touch(path: &String) -> Result<(), Box<dyn Error>> {
     match OpenOptions::new().create(true).write(true).open(path) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Box::new(e)),
+    }
+}
+
+fn touch_dir(path: &String) -> Result<(), Box<dyn Error>> {
+    match fs::create_dir_all(path) {
         Ok(_) => Ok(()),
         Err(e) => Err(Box::new(e)),
     }
