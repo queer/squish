@@ -21,9 +21,10 @@ pub async fn create_container(
         "spawned container {} in pid {} (slirp={})",
         name,
         container_pid.as_raw(),
-        slirp_pid.as_raw()
+        slirp_pid.as_raw(),
     );
-    // Can't lock before .await
+
+    // Minimise use so as to avoid lock contention
     let mut container_state = state.lock().unwrap();
     container_state
         .add_container(container_pid, slirp_pid, id, name)
