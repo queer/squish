@@ -194,14 +194,6 @@ fn run_in_container(squishfile: &Squishfile) {
     println!(">> inside the container!");
     println!(">> i am {}", process::id());
 
-    if let Ok(paths) = fs::read_dir("/") {
-        println!(">> my rootfs has:");
-        for path in paths {
-            println!(">>    {}", path.unwrap().path().display());
-        }
-    } else {
-        println!(">> warning: could not read_dir /");
-    }
     std::process::Command::new(squishfile.run().command())
         .args(squishfile.run().args())
         .output()
