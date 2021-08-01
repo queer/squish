@@ -63,28 +63,6 @@ pub fn setup_and_run_container(
         }
     }
 
-    // Bindmount app
-    let app = squishfile
-        .layers()
-        .get("app")
-        .expect("squishfile has no app layer!?");
-    let app_file_name = Path::new(app.path().as_ref().unwrap())
-        .file_name()
-        .expect("squishfile app has no filename!?")
-        .to_str()
-        .expect("Couldn't convert filename to string!?")
-        .to_string();
-    // TODO: This should handle automatic extraction of tarballs / zips
-    println!(">> bindmounting app");
-    let app_bind_path = &format!("{}/app/{}", container_path, app_file_name);
-    touch(&app_bind_path)?;
-    bind_mount(
-        app.path().as_ref().unwrap(),
-        app_bind_path,
-        MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
-    )?;
-    println!(">> bindmounting app finished!");
-
     // chroot!
     chroot(container_path.as_str()).expect("couldn't chroot!?");
     chdir("/").expect("couldn't chdir to /!?");
