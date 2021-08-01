@@ -123,44 +123,21 @@ pub fn parse_str<'a, T: Into<&'a str>>(squishfile: T) -> Result<Squishfile, Box<
             .collect(),
         None => vec![],
     };
-    let layers: BTreeMap<String, LayerSpec> = match table.get("layers") {
-        Some(layers) => {
-            match layers.as_table() {
-                Some(layers) => {
-                    let mut map = BTreeMap::new();
-                    layers
-                        .iter()
-                        .map(|(k, v)| {
-                            let out = if let Some(maybe_path) = v.as_str() {
-                                if maybe_path.starts_with("./") || maybe_path.starts_with("../") {
-                                    LayerSpec {
-                                        version: None,
-                                        path: Some(maybe_path.to_string()),
-                                        target: None,
-                                    }
-                                } else {
-                                    LayerSpec {
-                                        version: Some(maybe_path.to_string()),
-                                        path: None,
-                                        target: None,
-                                    }
-                                }
-                            } else {
-                                // TODO: Better error handling
-                                v.clone().try_into::<LayerSpec>().unwrap()
-                            };
-                            (k, out)
-                        })
-                        .for_each(|(k, v)| {
-                            map.insert(k.clone(), v);
-                        });
-                    map
-                }
-                None => panic!("squishfile: layers: not table"),
-            }
-        }
+
+    let layers_table = match table.get("layers") {
+        Some(layers) => layers,
         None => panic!("squishfile: layers not found"),
     };
+
+    let layers_table = match layers_table.as_table() {
+        Some(layers_table) => layers_table,
+        None => panic!("squishfile: layers: not table"),
+    };
+
+    let mut layers = BTreeMap::new();
+    for (k, v) in layers_table {
+        layers.insert(k.clone(), parse_layer(v)?);
+    }
 
     Ok(Squishfile {
         layers,
@@ -168,6 +145,27 @@ pub fn parse_str<'a, T: Into<&'a str>>(squishfile: T) -> Result<Squishfile, Box<
         env,
         ports,
     })
+}
+
+fn parse_layer(value: &toml::Value) -> Result<LayerSpec, Box<dyn Error>> {
+    match value.as_str() {
+        Some(maybe_path) => {
+            if maybe_path.starts_with("./") || maybe_path.starts_with("../") {
+                Ok(LayerSpec {
+                    version: None,
+                    path: Some(maybe_path.to_string()),
+                    target: None,
+                })
+            } else {
+                Ok(LayerSpec {
+                    version: Some(maybe_path.to_string()),
+                    path: None,
+                    target: None,
+                })
+            }
+        }
+        None => value.clone().try_into::<LayerSpec>().map_err(|e| e.into()),
+    }
 }
 
 pub fn parse<T: AsRef<Path>>(squishfile: T) -> Result<Squishfile, Box<dyn Error>> {
