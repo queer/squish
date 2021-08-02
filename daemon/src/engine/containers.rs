@@ -97,6 +97,8 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
         sleep(Duration::from_millis(100)).await;
         let mut container_state = state.lock().unwrap();
 
+        // This is dumb, but it SHOULD be dropped at the end of the scope so it
+        // SHOULD be fine?
         let clone = container_state.pid_id_map.clone();
 
         for (pid, id) in clone.iter() {
