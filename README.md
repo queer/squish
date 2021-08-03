@@ -22,12 +22,17 @@ read-only.
 - **Read-only** Alpine rootfs
 - Basic slirp4netns-based networking
 - Listing running containers
+- File and directory bind-mounts
+- Running without root
+- Port bindings
 
-### What doesn't work?
+### What doesn't work? aka roadmap
 
-- Persistence, lol
-- Any sort of volumes
-- Inter-container networking
+- Persistence of containers between daemon reboots
+- Networking between containers
+- Getting a shell in a container
+- Downloading layers from a remote source
+- Automagically✨ unpacking zips and tarballs
 
 ## Layers and binaries and images and whatnot
 
