@@ -14,47 +14,47 @@ pub enum Method {
     Delete,
 }
 
-pub async fn get(route: &'static str) -> Result<String, Box<dyn Error>> {
-    request::<String>(Method::Get, route, None).await
+pub async fn get<S: Into<String>>(route: S) -> Result<String, Box<dyn Error>> {
+    request::<S, String>(Method::Get, route, None).await
 }
 
-pub async fn post<S: Into<String>>(
-    route: &'static str,
-    body: Option<S>,
+pub async fn post<S: Into<String>, T: Into<String>>(
+    route: S,
+    body: Option<T>,
 ) -> Result<String, Box<dyn Error>> {
     request(Method::Post, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn put<S: Into<String>>(
-    route: &'static str,
-    body: Option<S>,
+pub async fn put<S: Into<String>, T: Into<String>>(
+    route: S,
+    body: Option<T>,
 ) -> Result<String, Box<dyn Error>> {
     request(Method::Put, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn patch<S: Into<String>>(
-    route: &'static str,
-    body: Option<S>,
+pub async fn patch<S: Into<String>, T: Into<String>>(
+    route: S,
+    body: Option<T>,
 ) -> Result<String, Box<dyn Error>> {
     request(Method::Patch, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn delete<S: Into<String>>(
-    route: &'static str,
-    body: Option<S>,
+pub async fn delete<S: Into<String>, T: Into<String>>(
+    route: S,
+    body: Option<T>,
 ) -> Result<String, Box<dyn Error>> {
     request(Method::Delete, route, body).await
 }
 
-pub async fn request<S: Into<String>>(
+pub async fn request<S: Into<String>, T: Into<String>>(
     method: Method,
-    route: &'static str,
-    body: Option<S>,
+    route: S,
+    body: Option<T>,
 ) -> Result<String, Box<dyn Error>> {
-    let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", route).into();
+    let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", &route.into()).into();
     let client = Client::unix();
     let body = match body {
         Some(s) => Body::from(s.into()),

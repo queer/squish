@@ -26,6 +26,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .about("Validate a squishfile")
                 .arg(Arg::new("squishfile").required(true)),
         )
+        .subcommand(
+            App::new("stop")
+                .about("Stop a container")
+                .arg(Arg::new("id").required(true)),
+        )
         .get_matches();
 
     match matches.subcommand_name() {
@@ -68,6 +73,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Send to daemon
             let res = client::post("/containers/create", Some(squishfile)).await?;
+            println!("got value: {}", res);
+        }
+        Some("stop") => {
+            // safe
+            let container_id = matches
+                .subcommand_matches("stop")
+                .ok_or("impossible")?
+                .value_of("id")
+                .ok_or("impossible")?;
+
+            // Send to daemon
+            let res =
+                client::post::<String, String>(format!("/containers/stop/{}", container_id), None)
+                    .await?;
             println!("got value: {}", res);
         }
         Some("validate") => {

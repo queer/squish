@@ -65,10 +65,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(warp::get())
         .and(with_state(global_state.clone()))
         .and_then(handlers::container::list_containers);
+    let container_stop = warp::path!("containers" / "stop" / String)
+        .and(warp::post())
+        .and(with_state(global_state.clone()))
+        .and_then(handlers::container::stop_container);
 
     let log = warp::log("squishd");
     let routes = warp::any()
-        .and(container_create.or(container_list))
+        .and(container_create.or(container_list).or(container_stop))
         .with(log);
 
     let listener = UnixListener::bind(path).unwrap();

@@ -11,7 +11,7 @@ use nix::sys::signal::kill;
 use nix::unistd::Pid;
 use tokio::time::sleep;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Container {
     pub name: String,
     pub pid: nix::unistd::Pid, // TODO: Support multi-pid
@@ -73,11 +73,37 @@ impl ContainerState {
         Ok(())
     }
 
+    pub fn fuzzy_remove_container(
+        &mut self,
+        partial_id_or_name: &String,
+    ) -> Result<Vec<String>, Box<dyn Error + '_>> {
+        let matches: Vec<&Container> = (&self.id_map)
+            .into_iter()
+            .filter(|(id, container)| {
+                id.starts_with(partial_id_or_name) || container.name.starts_with(partial_id_or_name)
+            })
+            .map(|(_id, container)| container)
+            .collect();
+        let mut matched_ids = vec![];
+        for container in matches {
+            matched_ids.push(container.id.clone());
+        }
+        self.remove_all_containers(matched_ids.clone())?;
+        Ok(matched_ids)
+    }
+
     pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn Error + '_>> {
-        let container = self.id_map.remove(id);
-        if let Some(container) = container {
-            self.pid_id_map.remove(&container.pid);
-            kill(container.slirp_pid, signal::SIGTERM)?;
+        self.remove_all_containers(vec![id.clone()])?;
+        Ok(())
+    }
+
+    pub fn remove_all_containers(&mut self, ids: Vec<String>) -> Result<(), Box<dyn Error + '_>> {
+        for id in ids {
+            let container = self.id_map.remove(&id);
+            if let Some(container) = container {
+                self.pid_id_map.remove(&container.pid);
+                kill(container.slirp_pid, signal::SIGTERM)?;
+            }
         }
         Ok(())
     }
