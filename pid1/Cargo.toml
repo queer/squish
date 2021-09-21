@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 libsquish = { path = "../libsquish" }
 
-clap = "3.0.0-beta.2"
+clap = "3.0.0-beta.4"
 futures = "0.3.17"
 nix = "0.22.1"
 reqwest = "0.11.4"
