@@ -79,7 +79,7 @@ fn spawn_container(
             //     soft.as_usize(),
             //     hard.as_usize()
             // );
-            soft.as_usize()
+            soft as usize
         }
         Err(_) => {
             // 8MB
