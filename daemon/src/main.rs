@@ -52,6 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clone = global_state.clone();
     tokio::spawn(engine::containers::reap_children(clone));
 
+    // Container routes
     let container_create = warp::path!("containers" / "create")
         .and(warp::post())
         .and(with_state(global_state.clone()))
@@ -70,9 +71,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(with_state(global_state.clone()))
         .and_then(handlers::container::stop_container);
 
+    // Utility routes
+    let status = warp::path!("status")
+        .and(warp::get())
+        .and_then(handlers::status);
+
     let log = warp::log("squishd");
     let routes = warp::any()
-        .and(container_create.or(container_list).or(container_stop))
+        .and(container_create.or(container_list).or(container_stop).or(status))
         .with(log);
 
     let listener = UnixListener::bind(path).unwrap();

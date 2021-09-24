@@ -6,7 +6,12 @@ cargo -q build
 echo ">> Starting tests!"
 # Run daemon
 cargo -q run -p daemon &
-sleep 2
+# Await daemon up
+while [ "`curl -s -o /dev/null -w "%{http_code}" --unix-socket /tmp/squishd.sock http:/x/status`" != "200" ]; do
+  sleep 0.5
+done
+sleep 1
+echo ">> Daemon up!"
 DAEMON=$(pidof daemon)
 
 # Assert no containers running
