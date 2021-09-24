@@ -32,7 +32,6 @@ stop_container() {
 echo -e ">> Running quiet build..."
 cargo -q build
 
-echo -e ">> Starting tests!"
 # Run daemon
 cargo -q run -p daemon &
 # Await daemon up
@@ -43,6 +42,8 @@ sleep 1
 echo -e ">> Daemon up!"
 DAEMON=$(pidof daemon)
 
+echo -e ">> Asserting sanity..."
+
 # Assert no containers running
 CONTAINER_COUNT=$(cargo -q run -p cli -- ps | wc -l)
 CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
@@ -52,6 +53,7 @@ if [ $CONTAINER_COUNT -ne 0 ]; then
   exit 1
 fi
 
+echo -e ">> Starting tests!"
 # Run tests!
 TOTAL=0
 PASSED=0
