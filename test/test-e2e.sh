@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+echo ">> Running quiet build..."
 cargo -q build
 
+echo ">> Starting tests!"
 # Run daemon
 cargo -q run -p daemon &
 sleep 2
@@ -42,4 +44,4 @@ fi
 
 # Clean up
 kill $DAEMON
-echo "All good! :D"
+echo ">> All good! :D"
