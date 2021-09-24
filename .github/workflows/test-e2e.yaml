@@ -1,0 +1,21 @@
+name: Run all tests on latest stable
+on:
+  push:
+    branches:
+      - mistress
+  pull_request:
+    branches:
+      - mistress
+
+jobs:
+  run-tests:
+    if: github.actor != 'dependabot'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+      - run: ./test/test-e2e.sh

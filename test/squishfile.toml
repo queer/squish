@@ -3,7 +3,7 @@ alpine = "3.14" # If not specified, uses squishd's latest-known-version
 # python = "3.9" # Support more ways of choosing versions? (ex. ~3.9 gives any 3.9.x or some shit)
 cargo-toml = { path = "./Cargo.toml", target = "/app/Cargo.toml" }
 cli = { path = "./cli", target = "/app/cli" }
-app = "./http-asm" # Tarballs, zips, etc. should be automatically detected and extracted (ideally hash+cache?)
+app = "./test/http-asm" # Tarballs, zips, etc. should be automatically detected and extracted (ideally hash+cache?)
 
 [run]
 # command = "/sdk/python/bin/python"
