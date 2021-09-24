@@ -18,5 +18,6 @@ jobs:
         with:
             toolchain: stable
             override: true
+      - uses: Swatinem/rust-cache@v1
       - name: Run e2e tests
         run: ./test/test-e2e.sh
