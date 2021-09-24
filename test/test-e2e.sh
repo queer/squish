@@ -4,6 +4,11 @@ DEFAULT="\e[39m"
 RED="\e[91m"
 GREEN="\e[92m"
 
+log() {
+  TS=$(date +%T)
+  echo -e "[$TS] $1"
+}
+
 start_container() {
   cargo -q run -p cli -- create test/squishfile.toml > /dev/null
 
@@ -11,7 +16,7 @@ start_container() {
   CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
 
   if [ $CONTAINER_COUNT -ne 1 ]; then
-    echo -e "Expected 1 container to be running, but found $CONTAINER_COUNT"
+    log "Expected 1 container to be running, but found $CONTAINER_COUNT"
     exit 1
   fi
 }
@@ -24,12 +29,12 @@ stop_container() {
   CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
 
   if [ $CONTAINER_COUNT -ne 0 ]; then
-    echo -e "Expected 0 containers to be running, but found $CONTAINER_COUNT"
+    log "Expected 0 containers to be running, but found $CONTAINER_COUNT"
     exit 1
   fi
 }
 
-echo -e ">> Running quiet build..."
+log "Running quiet build..."
 cargo -q build
 
 # Run daemon
@@ -39,26 +44,26 @@ while [ "`curl -s -o /dev/null -w "%{http_code}" --unix-socket /tmp/squishd.sock
   sleep 0.5
 done
 sleep 1
-echo -e ">> Daemon up!"
+log "Daemon up!"
 DAEMON=$(pidof daemon)
 
-echo -e ">> Asserting sanity..."
+log "Asserting sanity..."
 
 # Assert no containers running
 CONTAINER_COUNT=$(cargo -q run -p cli -- ps | wc -l)
 CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
 
 if [ $CONTAINER_COUNT -ne 0 ]; then
-  echo -e "Expected 0 containers to be running, but found $CONTAINER_COUNT"
+  log "Expected 0 containers to be running, but found $CONTAINER_COUNT"
   exit 1
 fi
 
-echo -e ">> Starting tests!"
+log "Starting tests!"
 # Run tests!
 TOTAL=0
 PASSED=0
 for f in test/e2e/*.sh; do
-  echo -e -n ">> Running $f..."
+  echo -e -n "[$(date +%T)] Running $f..."
   start_container
   OUTPUT=$(bash $f)
   LAST_STATUS=$?
@@ -78,9 +83,9 @@ done
 kill $DAEMON
 
 if [ $PASSED -ne $TOTAL ]; then
-  echo -e "$RED>> Failed $((TOTAL - PASSED))/$TOTAL tests!$DEFAULT"
+  log "${RED}Failed $((TOTAL - PASSED))/$TOTAL tests!$DEFAULT"
   exit 1
 else
-  echo -e "$GREEN>> Passed $PASSED/$TOTAL tests!$DEFAULT"
+  log "${GREEN}Passed $PASSED/$TOTAL tests!$DEFAULT"
 fi
 
