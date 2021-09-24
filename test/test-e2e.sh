@@ -63,7 +63,7 @@ log "Starting tests!"
 TOTAL=0
 PASSED=0
 for f in test/e2e/*.sh; do
-  echo -e -n "[$(date +%T)] Running $f..."
+  echo -e -n "[$(date +%T)] Running $(basename $f)..."
   start_container
   OUTPUT=$(bash $f)
   LAST_STATUS=$?
