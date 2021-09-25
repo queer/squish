@@ -88,4 +88,3 @@ if [ $PASSED -ne $TOTAL ]; then
 else
   log "${GREEN}Passed $PASSED/$TOTAL tests!$DEFAULT"
 fi
-
