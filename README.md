@@ -34,7 +34,7 @@ read-only.
 
 ### What won't be implemented?
 
-- Persistence of container between daemon reboots
+- Persistence of containers between daemon reboots
 - Getting a shell in a container
 
 ## Testing
