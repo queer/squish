@@ -28,11 +28,19 @@ read-only.
 
 ### What doesn't work? aka roadmap
 
-- Persistence of containers between daemon reboots
 - Networking between containers
-- Getting a shell in a container
 - Downloading layers from a remote source
 - Automagically✨ unpacking zips and tarballs
+
+### What won't be implemented?
+
+- Persistence of container between daemon reboots
+- Getting a shell in a container
+
+## Testing
+
+squish currently only has e2e tests. You can run them by running
+`./test/test-e2e.sh`.
 
 ## Layers and binaries and images and whatnot
 
