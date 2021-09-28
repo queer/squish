@@ -103,8 +103,8 @@ where
     let target = match layer.target() {
         Some(target) => target.clone(),
         None => {
-            // If path but no target, mount into /app
             if layer.path().is_some() {
+                // If path but no target, mount into /app
                 let target = layer
                     .path()
                     .as_ref()
@@ -113,10 +113,11 @@ where
                     .replace("./", "");
                 format!("/app/{}", target)
             } else if layer.version().is_none() {
+                // If no path and no target and no version, panic
                 panic!("squishfile no path or version for layer {}", layer_name);
             } else {
-                // TODO
-                todo!("mounting squish layer at path");
+                // If no path or target, but there is a version, mount into /sdk
+                format!("/sdk/{}", layer_name)
             }
         }
     };
@@ -132,10 +133,9 @@ where
         target
     };
     let target = format!("{}/{}", container_path, target);
-    if layer.path().is_none() && layer.version().is_some() && layer.target().is_none() {
-        // TODO
-        todo!("mounting squish layer normally");
-    }
+    // if layer.path().is_none() && layer.version().is_some() && layer.target().is_none() {
+    //     todo!("mounting squish layer normally");
+    // }
     let path = layer.path().as_ref().unwrap();
     let mount_path = Path::new(path);
     // Yeah this is technically racy, but literally who cares?
