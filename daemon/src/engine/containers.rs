@@ -120,8 +120,8 @@ impl ContainerState {
             let container = self.id_map.remove(&id);
             if let Some(container) = container {
                 self.pid_id_map.remove(&container.pid);
-                // // TODO: Wait and SIGKILL the container as needed
-                // kill(container.pid, signal::SIGTERM)?;
+                // TODO: Wait and SIGKILL the container as needed
+                kill(container.pid, signal::SIGTERM)?;
                 kill(container.slirp_pid, signal::SIGTERM)?;
             }
         }
