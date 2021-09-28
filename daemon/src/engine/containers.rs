@@ -179,7 +179,7 @@ fn cleanup_container<'a>(
     id: &'a String,
 ) -> Result<(), Box<dyn Error + 'a>> {
     state.remove_container(id)?;
-    // fs::remove_dir_all(path_to(id))?;
+    fs::remove_dir_all(path_to(id))?;
     fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())
 }
