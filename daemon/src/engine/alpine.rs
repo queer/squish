@@ -9,7 +9,6 @@ use std::path::Path;
 use yaml_rust::{Yaml, YamlLoader};
 
 /// The current version of Alpine that this squishd knows about.
-/// TODO: Dynamic version finding
 pub const VERSION: &'static str = "3.14";
 /// The architecture of Alpine that this squishd knows about. Maybe this will
 /// support ARM etc. in the future.
@@ -34,7 +33,6 @@ pub fn current_rootfs_tarball(version: &String, arch: &String) -> String {
 
 /// The current rootfs. This is determined by the baked-in version / arch, and
 /// resolves to a path under the main rootfs directory.
-/// TODO: Dynamic version finding
 pub fn current_rootfs(version: &String, arch: &String) -> String {
     format!("{}/alpine-rootfs-{}-{}", rootfs_directory(), version, arch)
 }
