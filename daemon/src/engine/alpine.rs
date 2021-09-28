@@ -7,14 +7,21 @@ use std::path::Path;
 
 use yaml_rust::{Yaml, YamlLoader};
 
-// TODO: Dynamic version-finding?
+/// The current version of Alpine that this squishd knows about.
+/// TODO: Dynamic version finding
 pub const VERSION: &'static str = "3.14";
+/// The architecture of Alpine that this squishd knows about. Maybe this will
+/// support ARM etc. in the future.
 pub const ARCH: &'static str = "x86_64";
 
+/// The rootfs directory. This is the directory that Alpine rootfs images are
+/// cached in.
 pub fn rootfs_directory() -> &'static str {
     "cache/alpine/rootfs"
 }
 
+/// The path to the current rootfs tarball. This is
+/// `rootfs_directory()/alpine-rootfs-{VERSION}-{ARCH}.tar.gz`.
 pub fn current_rootfs_tarball() -> String {
     format!(
         "{}/alpine-rootfs-{}-{}.tar.gz",
@@ -24,10 +31,15 @@ pub fn current_rootfs_tarball() -> String {
     )
 }
 
+/// The current rootfs. This is determined by the baked-in version / arch, and
+/// resolves to a path under the main rootfs directory.
+/// TODO: Dynamic version finding
 pub fn current_rootfs() -> String {
     format!("{}/alpine-rootfs-{}-{}", rootfs_directory(), VERSION, ARCH)
 }
 
+/// The base URL to download Alpine rootfs images from.
+/// TODO: Use a mirror list properly
 pub fn base_url() -> String {
     format!(
         "https://cz.alpinelinux.org/alpine/v{}/releases/{}",
@@ -35,6 +47,8 @@ pub fn base_url() -> String {
     )
 }
 
+/// Download the base Alpine rootfs image. This will download andd cache the
+/// rootfs image from a mirror (based on `base_url()`).
 pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
     if Path::new(&current_rootfs_tarball()).exists() {
         info!("rootfs tarball already exists, not downloading again");

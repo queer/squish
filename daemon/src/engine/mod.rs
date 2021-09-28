@@ -13,6 +13,10 @@ use nix::unistd::Pid;
 use crate::engine::alpine::current_rootfs;
 
 /// (container pid, slirp pid)
+/// Spawns a container, taking in the new container's ID and the squishfile
+/// describing it. This function copies the squishfile to a temporary directory,
+/// spawns the `pid1` binary, starts the slirp4netns process, and then applies
+/// all port forwards. A tuple of pids (container, slirp4netns) is returned.
 pub async fn spawn_container(
     id: &String,
     squishfile: Squishfile,

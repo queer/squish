@@ -8,6 +8,18 @@ use libsquish::squishfile::{LayerSpec, Squishfile};
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
+/// Sets up and runs the given container. This function will
+/// - Create the necessary paths for the container to exist
+/// - Redirect this process' stdout/stderr to log files
+/// - Bind-mount the container's rootfs
+/// - Bind-mount in the special devices
+///   - `/dev/null`
+///   - `/dev/zero`
+///   - `/dev/random`
+///   - `/dev/urandom`
+/// - Mount all non-app layers
+/// - Bind-mount the app layer into `/app`
+/// - Run the container
 pub fn setup_and_run_container(
     rootfs: &String,
     path: &String,

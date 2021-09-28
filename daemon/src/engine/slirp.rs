@@ -13,6 +13,8 @@ use tokio::time::sleep;
 
 const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.11/slirp4netns-x86_64";
 
+/// Downloads the current slirp4netns binary. This caches in the same directory
+/// as the Alpine rootfs images.
 pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
     let output_path = "cache/slirp4netns";
     if Path::new(output_path).exists() {
@@ -32,6 +34,7 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error>> {
     Ok(output_path)
 }
 
+/// Adds a port-forward to the given slirp4netns instance via its socket.
 pub async fn add_port_forward(
     socket: &String,
     host: &u16,
@@ -58,6 +61,7 @@ pub async fn add_port_forward(
     .await
 }
 
+/// Executes a slirp4netns command over the given socket.
 pub async fn slirp_exec(
     slirp_socket_path: &String,
     command: &str,

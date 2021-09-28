@@ -19,6 +19,11 @@ impl Squishfile {
         self.layers.insert(layer.to_string(), new_data.clone());
     }
 
+    /// Resolves paths in the squishfile to absolute paths where possible. This
+    /// is primarily to allow local file mounts. Local paths are resolved when
+    /// we detect that a version is NOT specified. Generally speaking, this
+    /// means that either a `path` is explicitly specified, or the given path
+    /// starts with `./` or `../`.
     pub fn resolve_paths(&mut self) {
         let resolved: Vec<(String, LayerSpec)> = self
             .layers

@@ -11,6 +11,10 @@ use nix::sys::signal::kill;
 use nix::unistd::Pid;
 use tokio::time::sleep;
 
+/// A squish container. A container is basically just a tracked pid, that has a
+/// hexadecimal id and a name attached to it. Containers also contain a pid for
+/// their respective slirp4netns instances, as well as a timestamp for when
+/// they were created.
 #[derive(Debug, Clone)]
 pub struct Container {
     pub name: String,
@@ -30,6 +34,10 @@ impl Into<libsquish::RunningContainer> for &Container {
     }
 }
 
+/// The global state of the daemon. To avoid constant locking, this is kept
+/// fairly small. It contains a mapping from container ids to `Container`
+/// structs, as well as a mapping from container pids to container ids. This
+/// data can be relied on to always be up to date.
 #[derive(Debug)]
 pub struct ContainerState {
     id_map: HashMap<String, Container>,
@@ -44,6 +52,7 @@ impl ContainerState {
         }
     }
 
+    /// Generates a (id, name) tuple. The id is a SHA256 hash of the name.
     pub fn generate_id() -> (String, String) {
         let haiku = Haikunator::default();
         let name = haiku.haikunate();
@@ -52,6 +61,7 @@ impl ContainerState {
         (id, name)
     }
 
+    /// Add a container to the global container state.
     pub fn add_container(
         &mut self,
         pid: nix::unistd::Pid,
@@ -73,6 +83,11 @@ impl ContainerState {
         Ok(())
     }
 
+    /// Remove a container or set of containers based on "fuzzy" matching of
+    /// container names or ids. This partially matches the container name or id
+    /// based on starting characters. That is, a container is removed if its
+    /// name or its id starts with the partial value passed in. This is not a
+    /// general substring match.
     pub fn fuzzy_remove_container(
         &mut self,
         partial_id_or_name: &String,
@@ -92,23 +107,29 @@ impl ContainerState {
         Ok(matched_ids)
     }
 
+    /// Remove the container with the given id.
     pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn Error + '_>> {
         self.remove_all_containers(vec![id.clone()])?;
         Ok(())
     }
 
+    /// Remove all containers matching the ids in the list. This will kill the
+    /// container and slirp4netns instances as a side effect.
     pub fn remove_all_containers(&mut self, ids: Vec<String>) -> Result<(), Box<dyn Error + '_>> {
         for id in ids {
             let container = self.id_map.remove(&id);
             if let Some(container) = container {
                 self.pid_id_map.remove(&container.pid);
+                // // TODO: Wait and SIGKILL the container as needed
+                // kill(container.pid, signal::SIGTERM)?;
                 kill(container.slirp_pid, signal::SIGTERM)?;
             }
         }
         Ok(())
     }
 
-    /// id <-> name
+    /// Returns a list of all currently-running containers. This is guaranteed
+    /// to never contain state of currently-stopped containers.
     pub fn running_containers(&self) -> Vec<libsquish::RunningContainer> {
         let mut out = vec![];
         for v in self.id_map.values() {
@@ -118,6 +139,8 @@ impl ContainerState {
     }
 }
 
+/// A background task for reaping dead containers. This checks the global state
+/// 10 times per second, removing all container pids that no longer exist.
 pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     loop {
         sleep(Duration::from_millis(100)).await;
