@@ -1,5 +1,6 @@
 use crate::util::SquishError;
 
+use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -22,39 +23,42 @@ pub fn rootfs_directory() -> &'static str {
 
 /// The path to the current rootfs tarball. This is
 /// `rootfs_directory()/alpine-rootfs-{VERSION}-{ARCH}.tar.gz`.
-pub fn current_rootfs_tarball() -> String {
+pub fn current_rootfs_tarball(version: &String, arch: &String) -> String {
     format!(
         "{}/alpine-rootfs-{}-{}.tar.gz",
         rootfs_directory(),
-        VERSION,
-        ARCH
+        version,
+        arch
     )
 }
 
 /// The current rootfs. This is determined by the baked-in version / arch, and
 /// resolves to a path under the main rootfs directory.
 /// TODO: Dynamic version finding
-pub fn current_rootfs() -> String {
-    format!("{}/alpine-rootfs-{}-{}", rootfs_directory(), VERSION, ARCH)
+pub fn current_rootfs(version: &String, arch: &String) -> String {
+    format!("{}/alpine-rootfs-{}-{}", rootfs_directory(), version, arch)
 }
 
 /// The base URL to download Alpine rootfs images from.
 /// TODO: Use a mirror list properly
-pub fn base_url() -> String {
+pub fn base_url(version: &String, arch: &String) -> String {
     format!(
         "https://cz.alpinelinux.org/alpine/v{}/releases/{}",
-        VERSION, ARCH
+        version, arch
     )
 }
 
-/// Download the base Alpine rootfs image. This will download andd cache the
+/// Download the base Alpine rootfs image. This will download and cache the
 /// rootfs image from a mirror (based on `base_url()`).
-pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
-    if Path::new(&current_rootfs_tarball()).exists() {
+pub async fn download_base_image(
+    version: &String,
+    arch: &String,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    if Path::new(&current_rootfs_tarball(&version, &arch)).exists() {
         info!("rootfs tarball already exists, not downloading again");
         return Ok(());
     }
-    let manifest_url = format!("{}/latest-releases.yaml", base_url());
+    let manifest_url = format!("{}/latest-releases.yaml", base_url(&version, &arch));
     debug!("downloading alpine minirootfs from {}", &manifest_url);
     let manifest_text = reqwest::get(manifest_url).await?.text().await?;
 
@@ -67,9 +71,9 @@ pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
         });
         if let Some(rootfs_manifest) = maybe_rootfs_manifest {
             info!("found alpine minirootfs! downloading...");
-            let tarball = download_rootfs(rootfs_manifest).await?;
-            extract_tarball(tarball, current_rootfs())?;
-            setup_rootfs(current_rootfs())
+            let tarball = download_rootfs(rootfs_manifest, &version, &arch).await?;
+            extract_tarball(tarball, current_rootfs(&version, &arch))?;
+            setup_rootfs(current_rootfs(&version, &arch))
         } else {
             Err(Box::new(SquishError::AlpineManifestMissing))
         }
@@ -78,17 +82,21 @@ pub async fn download_base_image() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-async fn download_rootfs(rootfs_manifest: &Yaml) -> Result<String, Box<dyn std::error::Error>> {
+async fn download_rootfs(
+    rootfs_manifest: &Yaml,
+    version: &String,
+    arch: &String,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
     match rootfs_manifest["file"].as_str() {
         Some(rootfs_filename) => {
             // minirootfs is a ~3MB tarball, so we can afford to hold
             // it all in memory.
-            let rootfs_url = format!("{}/{}", base_url(), rootfs_filename);
+            let rootfs_url = format!("{}/{}", base_url(version, arch), rootfs_filename);
 
             let download_response = reqwest::get(rootfs_url).await?;
             let rootfs_bytes = download_response.bytes().await?;
 
-            let output_path = current_rootfs_tarball();
+            let output_path = current_rootfs_tarball(version, arch);
             debug!("downloading alpine minirootfs into {}", &output_path);
             fs::create_dir_all(&rootfs_directory())?;
             let mut output_file = fs::OpenOptions::new()
@@ -102,7 +110,7 @@ async fn download_rootfs(rootfs_manifest: &Yaml) -> Result<String, Box<dyn std::
     }
 }
 
-fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn std::error::Error>> {
+fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn Error + Send + Sync>> {
     info!("extracting alpine rootfs from {} to {}", path, target_path);
     let tarball = fs::File::open(path)?;
     let tar = flate2::read::GzDecoder::new(tarball);
@@ -111,7 +119,7 @@ fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn std::error::Error>> {
+fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn Error + Send + Sync>> {
     // devices
     info!("setting up dummy devices");
     File::create(format!("{}/dev/null", rootfs))?;

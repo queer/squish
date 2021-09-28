@@ -42,7 +42,10 @@ pub async fn list_containers(
     Ok(warp::reply::json(&running_containers))
 }
 
-pub async fn stop_container(id: String, state: Arc<Mutex<ContainerState>>) -> Result<impl warp::Reply, Rejection> {
+pub async fn stop_container(
+    id: String,
+    state: Arc<Mutex<ContainerState>>,
+) -> Result<impl warp::Reply, Rejection> {
     let mut container_state = state.lock().unwrap();
     let ids = container_state.fuzzy_remove_container(&id).unwrap();
     Ok(warp::reply::json(&ids))

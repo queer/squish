@@ -10,8 +10,6 @@ use std::process::{Command, Stdio};
 use libsquish::squishfile::Squishfile;
 use nix::unistd::Pid;
 
-use crate::engine::alpine::current_rootfs;
-
 /// (container pid, slirp pid)
 /// Spawns a container, taking in the new container's ID and the squishfile
 /// describing it. This function copies the squishfile to a temporary directory,
@@ -34,11 +32,20 @@ pub async fn spawn_container(
     )?;
 
     debug!("{}: pid1 setup", &id);
-    // TODO: Don't hardcode this plz
+    let base_version = alpine::VERSION.to_string();
+    let base_arch = alpine::ARCH.to_string();
+    let alpine_version = match squishfile.layers().get("alpine") {
+        Some(version) => version
+            .version()
+            .as_ref()
+            .expect("No alpine version present!?"), // TODO: Allow alpine-less containers
+        None => &base_version,
+    };
+    alpine::download_base_image(&alpine_version, &base_arch).await?;
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
-            current_rootfs().as_str(), // TODO: Allow just not having a rootfs
+            alpine::current_rootfs(&alpine_version, &base_arch).as_str(), // TODO: Allow just not having a rootfs
             "--id",
             id.as_str(),
             "--path",

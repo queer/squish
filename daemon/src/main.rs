@@ -15,6 +15,7 @@ extern crate yaml_rust;
 
 use crate::engine::containers::ContainerState;
 
+use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
@@ -30,7 +31,7 @@ mod util;
 
 #[cfg(unix)]
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     use tokio::net::UnixListener;
     use tokio_stream::wrappers::UnixListenerStream;
 
@@ -38,7 +39,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("squishd booting...");
 
     info!("prefetching alpine base image...");
-    engine::alpine::download_base_image().await?;
+    engine::alpine::download_base_image(
+        &engine::alpine::VERSION.to_string(),
+        &engine::alpine::ARCH.to_string(),
+    )
+    .await?;
     info!("prefetching slirp4netns binary...");
     engine::slirp::download_slirp4netns().await?;
 
@@ -78,7 +83,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let log = warp::log("squishd");
     let routes = warp::any()
-        .and(container_create.or(container_list).or(container_stop).or(status))
+        .and(
+            container_create
+                .or(container_list)
+                .or(container_stop)
+                .or(status),
+        )
         .with(log);
 
     let listener = UnixListener::bind(path).unwrap();

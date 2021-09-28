@@ -1,0 +1,16 @@
+[layers]
+alpine = "3.13"
+app = "./test/http-asm"
+
+[run]
+command = "/app/http-asm"
+args = ["2000", "/etc"]
+
+[env]
+KEY = "value"
+IN_SQUISH_CONTAINER = "true"
+
+[[ports]]
+container = 2000
+host = 42069
+protocol = "tcp"

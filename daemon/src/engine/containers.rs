@@ -121,8 +121,18 @@ impl ContainerState {
             if let Some(container) = container {
                 self.pid_id_map.remove(&container.pid);
                 // TODO: Wait and SIGKILL the container as needed
-                kill(container.pid, signal::SIGTERM)?;
-                kill(container.slirp_pid, signal::SIGTERM)?;
+                match kill(container.pid, signal::SIGTERM) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        error!("Failed to kill container {}: {}", container.id, e);
+                    }
+                }
+                match kill(container.slirp_pid, signal::SIGTERM) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        error!("Failed to kill container {}: {}", container.id, e);
+                    }
+                }
             }
         }
         Ok(())
@@ -169,7 +179,7 @@ fn cleanup_container<'a>(
     id: &'a String,
 ) -> Result<(), Box<dyn Error + 'a>> {
     state.remove_container(id)?;
-    fs::remove_dir_all(path_to(id))?;
+    // fs::remove_dir_all(path_to(id))?;
     fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())
 }

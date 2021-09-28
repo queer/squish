@@ -10,13 +10,13 @@ log() {
 }
 
 start_container() {
-  cargo -q run -p cli -- create test/squishfile.toml > /dev/null
+  cargo -q run -p cli -- create $1 > /dev/null
 
   CONTAINER_COUNT=$(cargo -q run -p cli -- ps | wc -l)
   CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
 
   if [ $CONTAINER_COUNT -ne 1 ]; then
-    log "Expected 1 container to be running, but found $CONTAINER_COUNT"
+    log "${RED}ERROR:${DEFAULT} Expected 1 container to be running, but found $CONTAINER_COUNT"
     exit 1
   fi
 }
@@ -29,7 +29,7 @@ stop_container() {
   CONTAINER_COUNT=$((CONTAINER_COUNT - 1))
 
   if [ $CONTAINER_COUNT -ne 0 ]; then
-    log "Expected 0 containers to be running, but found $CONTAINER_COUNT"
+    log "${RED}ERROR:${DEFAULT} Expected 0 containers to be running, but found $CONTAINER_COUNT"
     exit 1
   fi
 }
@@ -64,18 +64,25 @@ TOTAL=0
 PASSED=0
 for f in test/e2e/*.sh; do
   echo -e -n "[$(date +%T)] Running $(basename $f)..."
-  start_container
+
+  SQUISHFILE=$(grep "SQUISHFILE_OVERRIDE=" $f | sed -e 's/# SQUISHFILE_OVERRIDE=//')
+  SQUISHFILE="${SQUISHFILE:-./test/squishfile.toml}"
+
+  start_container $SQUISHFILE
+  START=$(($(date +%s%N)/1000000))
   OUTPUT=$(bash $f)
   LAST_STATUS=$?
+  END=$(($(date +%s%N)/1000000))
+  DURATION=$((END - START))
   stop_container
   let TOTAL++
   if [ $LAST_STATUS -ne 0 ]; then
-    echo -e "$RED FAILED$DEFAULT"
+    echo -e "${RED} FAILED${DEFAULT} (${DURATION}ms)"
     echo -e $OUTPUT
     echo -e
   else
     let PASSED++
-    echo -e "$GREEN PASSED$DEFAULT"
+    echo -e "${GREEN} PASSED${DEFAULT} (${DURATION}ms)"
   fi
 done
 
