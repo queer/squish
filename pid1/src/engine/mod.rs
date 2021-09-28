@@ -205,7 +205,11 @@ fn touch_dir(path: &String) -> Result<(), Box<dyn Error>> {
 fn run_in_container(squishfile: &Squishfile) {
     println!(">> inside the container!");
     println!(">> i am {}", process::id());
-    println!(">> running: {} {:?}", squishfile.run().command(), squishfile.run().args());
+    println!(
+        ">> running: {} {:?}",
+        squishfile.run().command(),
+        squishfile.run().args()
+    );
 
     std::process::Command::new(squishfile.run().command())
         .args(squishfile.run().args())
