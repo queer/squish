@@ -119,6 +119,7 @@ impl ContainerState {
         for id in ids {
             let container = self.id_map.remove(&id);
             if let Some(container) = container {
+                info!("Cleaning and killing {}...", container.id);
                 self.pid_id_map.remove(&container.pid);
                 // TODO: Wait and SIGKILL the container as needed
                 match kill(container.pid, signal::SIGTERM) {
@@ -133,6 +134,7 @@ impl ContainerState {
                         error!("Failed to kill container {}: {}", container.id, e);
                     }
                 }
+                cleanup_container(container.id.clone())?;
             }
         }
         Ok(())
@@ -165,7 +167,13 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
             let path = format!("/proc/{}", pid.as_raw());
             let path = Path::new(&path);
             if !path.exists() {
-                match cleanup_container(&mut container_state, id) {
+                match container_state.remove_container(id) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        error!("Failed to remove container files for {}: {}", id, e);
+                    }
+                }
+                match cleanup_container(id.to_string()) {
                     Ok(_) => info!("cleaned up dead container {}", pid.as_raw()),
                     Err(e) => error!("error cleaning up dead container {}: {}", pid.as_raw(), e),
                 }
@@ -174,12 +182,10 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     }
 }
 
-fn cleanup_container<'a>(
-    state: &'a mut ContainerState,
-    id: &'a String,
-) -> Result<(), Box<dyn Error + 'a>> {
-    state.remove_container(id)?;
-    fs::remove_dir_all(path_to(id))?;
+fn cleanup_container(
+    id: String,
+) -> Result<(), Box<dyn Error>> {
+    fs::remove_dir_all(path_to(&id))?;
     fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())
 }

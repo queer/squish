@@ -52,7 +52,6 @@ pub fn setup_and_run_container(
     close(stderr_dup)?;
 
     // Bindmount rootfs ro
-    // TODO: Determine rootfs from squishfile versions
     bind_mount(
         &rootfs,
         &container_path,
@@ -66,6 +65,11 @@ pub fn setup_and_run_container(
     bind_mount_dev("/dev/random", &format!("{}/dev/random", container_path))?;
     bind_mount_dev("/dev/urandom", &format!("{}/dev/urandom", container_path))?;
     println!(">> bindmounting devices finished!");
+
+    // Bindmount /tmp rw
+    let tmp_path = format!("{}/tmp", &path);
+    fs::create_dir_all(&tmp_path)?;
+    bind_mount(&tmp_path, &format!("{}/tmp", container_path), MsFlags::MS_NOSUID)?;
 
     for (layer_name, layer) in squishfile.layers() {
         if layer_name != "alpine" && layer_name != "app" {
