@@ -34,18 +34,19 @@ pub async fn spawn_container(
     debug!("{}: pid1 setup", &id);
     let base_version = alpine::VERSION.to_string();
     let base_arch = alpine::ARCH.to_string();
+    // TODO: Allow not having an alpine base image for "FROM scratch"-equiv containers
     let alpine_version = match squishfile.layers().get("alpine") {
         Some(version) => version
             .version()
             .as_ref()
-            .expect("No alpine version present!?"), // TODO: Allow alpine-less containers
+            .expect("No alpine version present!?"),
         None => &base_version,
     };
     alpine::download_base_image(&alpine_version, &base_arch).await?;
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
-            alpine::current_rootfs(&alpine_version, &base_arch).as_str(), // TODO: Allow just not having a rootfs
+            alpine::current_rootfs(&alpine_version, &base_arch).as_str(),
             "--id",
             id.as_str(),
             "--path",

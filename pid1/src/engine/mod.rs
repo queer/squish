@@ -83,8 +83,6 @@ pub fn setup_and_run_container(
     chroot(container_path.as_str()).expect("couldn't chroot!?");
     chdir("/").expect("couldn't chdir to /!?");
 
-    // TODO: Should totally be blocking on slirp4netns being up here...
-
     run_in_container(&squishfile);
     println!(">> done!");
     Ok(())
