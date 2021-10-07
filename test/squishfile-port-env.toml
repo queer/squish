@@ -1,0 +1,16 @@
+[layers]
+alpine = "3.13"
+runner = { path = "./test/support/env-to-tmp-and-run.sh", target = "/app/run.sh" }
+app = "./test/http-asm"
+
+[run]
+command = "/app/run.sh"
+args = []
+
+[env]
+TEST_KEY = "ed4a92f174398375a5a036f5b06b61984d977640ff03e55288a5c62c7e8fcd0c"
+
+[[ports]]
+container = 2000
+host = 42069
+protocol = "tcp"

@@ -213,7 +213,9 @@ fn run_in_container(squishfile: &Squishfile) {
         squishfile.run().args()
     );
 
+    // TODO: Set env vars here
     std::process::Command::new(squishfile.run().command())
+        .envs(squishfile.env())
         .args(squishfile.run().args())
         .output()
         .unwrap();
