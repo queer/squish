@@ -73,7 +73,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Send to daemon
             let res = client::post("/containers/create", Some(squishfile)).await?;
-            println!("got value: {}", res);
+            let id: serde_json::Value = serde_json::from_str(res.as_str())?;
+            println!("{}", id.as_str().unwrap());
         }
         Some("stop") => {
             // safe
@@ -87,7 +88,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let res =
                 client::post::<String, String>(format!("/containers/stop/{}", container_id), None)
                     .await?;
-            println!("got value: {}", res);
+            let ids = serde_json::from_str(res.as_str())?;
+            match ids {
+                serde_json::Value::Array(ids) => {
+                    for id in ids {
+                        println!("{}", id.as_str().unwrap());
+                    }
+                },
+                _ => eprintln!("got unknown value: {}", res),
+            }
         }
         Some("validate") => {
             // safe

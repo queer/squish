@@ -26,11 +26,11 @@ pub async fn create_container(
 
     // Minimise use so as to avoid lock contention
     let mut container_state = state.lock().unwrap();
+    // TODO: Real struct for responses someday
     container_state
-        .add_container(container_pid, slirp_pid, id, name)
+        .add_container(container_pid, slirp_pid, &id, name)
         .unwrap();
-    let res = "{\"status\":\"ok\"}".to_string();
-    Ok(warp::reply::json(&res))
+    Ok(warp::reply::json(&id))
 }
 
 pub async fn list_containers(

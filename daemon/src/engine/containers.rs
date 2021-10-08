@@ -66,7 +66,7 @@ impl ContainerState {
         &mut self,
         pid: nix::unistd::Pid,
         slirp_pid: nix::unistd::Pid,
-        id: String,
+        id: &String,
         name: String,
     ) -> Result<(), Box<dyn Error + '_>> {
         self.id_map.insert(
