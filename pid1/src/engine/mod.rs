@@ -38,12 +38,12 @@ pub fn setup_and_run_container(
     let stdout_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("{}/output.log", &path))?;
+        .open(format!("{}/stdout.log", &path))?;
     let stdout_log_fd = stdout_log.into_raw_fd();
     let stderr_log = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(format!("{}/error.log", &path))?;
+        .open(format!("{}/stderr.log", &path))?;
     let stderr_log_fd = stderr_log.into_raw_fd();
 
     dup2(stdout_log_fd, stdout_dup)?;
