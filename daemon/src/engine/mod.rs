@@ -52,9 +52,6 @@ pub async fn spawn_container(
             "--path",
             containers::path_to(&id).as_str(),
             "--squishfile",
-            // If you're going to get upset about this, just remember:
-            // nftables did it first.
-            // https://manpages.debian.org/testing/libnftables1/libnftables-json.5.en.html
             temp_path.as_str(),
         ])
         .envs(squishfile.env())
