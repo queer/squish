@@ -1,3 +1,4 @@
+use crate::engine::USER_AGENT;
 use crate::util::SquishError;
 
 use std::error::Error;
@@ -23,7 +24,14 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send
     }
     info!("downloading slirp4netns binary from {}", URL);
     // TODO: Refactor this to reuse code from alpine / layers where possible
-    let slirp_bytes = reqwest::get(URL).await?.bytes().await?;
+    let slirp_bytes = reqwest::Client::builder()
+        .user_agent(USER_AGENT)
+        .build()?
+        .get(URL)
+        .send()
+        .await?
+        .bytes()
+        .await?;
     let mut output_file = fs::OpenOptions::new()
         .write(true)
         .create_new(true)

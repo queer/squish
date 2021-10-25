@@ -1,4 +1,4 @@
-use crate::util::SquishError;
+use crate::{engine::USER_AGENT, util::SquishError};
 
 use std::error::Error;
 use std::fs;
@@ -58,7 +58,14 @@ pub async fn download_base_image(
     }
     let manifest_url = format!("{}/latest-releases.yaml", base_url(&version, &arch));
     debug!("downloading alpine minirootfs from {}", &manifest_url);
-    let manifest_text = reqwest::get(manifest_url).await?.text().await?;
+    let manifest_text = reqwest::Client::builder()
+        .user_agent(USER_AGENT)
+        .build()?
+        .get(manifest_url)
+        .send()
+        .await?
+        .text()
+        .await?;
 
     let docs = YamlLoader::load_from_str(manifest_text.as_str())?;
     let manifest = &docs[0];

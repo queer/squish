@@ -10,6 +10,8 @@ use std::process::{Command, Stdio};
 use libsquish::squishfile::Squishfile;
 use nix::unistd::Pid;
 
+pub const USER_AGENT: &'static str = "squish (https://github.com/queer/squish)";
+
 /// (container pid, slirp pid)
 /// Spawns a container, taking in the new container's ID and the squishfile
 /// describing it. This function copies the squishfile to a temporary directory,
