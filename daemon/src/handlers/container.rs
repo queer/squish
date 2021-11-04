@@ -30,7 +30,7 @@ pub async fn create_container(
     container_state
         .add_container(container_pid, slirp_pid, &id, name)
         .unwrap();
-    Ok(warp::reply::json(&id))
+    Ok(warp::reply::json(&vec![&id]))
 }
 
 pub async fn list_containers(

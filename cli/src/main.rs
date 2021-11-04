@@ -73,8 +73,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             // Send to daemon
             let res = client::post("/containers/create", Some(serde_json::to_string(&squishfile)?)).await?;
-            let id: serde_json::Value = serde_json::from_str(res.as_str())?;
-            println!("{}", id.as_str().unwrap());
+            let ids: serde_json::Value = serde_json::from_str(res.as_str())?;
+            for id in ids.as_array().unwrap() {
+                println!("{}", id.as_str().unwrap());
+            }
         }
         Some("stop") => {
             // safe
