@@ -17,6 +17,7 @@ const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/re
 /// Downloads the current slirp4netns binary. This caches in the same directory
 /// as the Alpine rootfs images.
 pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send + Sync>> {
+    // TODO: Version this
     let output_path = "cache/slirp4netns";
     if Path::new(output_path).exists() {
         info!("slirp4netns binary already exists, not downloading again");
