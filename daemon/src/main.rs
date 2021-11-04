@@ -21,7 +21,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use libsquish::squishfile;
 use warp::hyper::body::Bytes;
 use warp::Filter;
 
@@ -64,7 +63,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .and(warp::body::bytes().map(|bytes: Bytes| {
             let vec: Vec<u8> = bytes.to_vec();
             let body = String::from_utf8(vec).expect("squishfile not valid string");
-            squishfile::parse_str(&*body).expect("squishfile invalid")
+            serde_json::from_str(&*body).expect("squishfile invalid")
         }))
         .and_then(handlers::container::create_container);
     let container_list = warp::path!("containers" / "list")
