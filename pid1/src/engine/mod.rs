@@ -69,7 +69,11 @@ pub fn setup_and_run_container(
     // Bindmount /tmp rw
     let tmp_path = format!("{}/tmp", &path);
     fs::create_dir_all(&tmp_path)?;
-    bind_mount(&tmp_path, &format!("{}/tmp", container_path), MsFlags::MS_NOSUID)?;
+    bind_mount(
+        &tmp_path,
+        &format!("{}/tmp", container_path),
+        MsFlags::MS_NOSUID,
+    )?;
 
     for (layer_name, layer) in squishfile.layers() {
         if layer_name != "alpine" && layer_name != "app" {

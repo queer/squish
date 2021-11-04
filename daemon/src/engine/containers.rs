@@ -182,9 +182,7 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     }
 }
 
-fn cleanup_container(
-    id: String,
-) -> Result<(), Box<dyn Error>> {
+fn cleanup_container(id: String) -> Result<(), Box<dyn Error>> {
     fs::remove_dir_all(path_to(&id))?;
     fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())

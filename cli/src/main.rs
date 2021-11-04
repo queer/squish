@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     for id in ids {
                         println!("{}", id.as_str().unwrap());
                     }
-                },
+                }
                 _ => eprintln!("got unknown value: {}", res),
             }
         }
