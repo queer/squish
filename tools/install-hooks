@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Pre-commit hook
-rm ./.git/hooks/pre-commit > /dev/null
-echo 'echo ">> Running \`cargo fmt\`..."' >> ./.git/hooks/pre-commit
-echo 'cargo fmt' >> ./.git/hooks/pre-commit
-echo 'echo ">> Done!"' >> ./.git/hooks/pre-commit
-chmod +x ./.git/hooks/pre-commit
+HOOK="./.git/hooks/pre-commit"
+rm $HOOK > /dev/null
+echo 'echo ">> Running \`cargo fmt\`..."' >> $HOOK
+echo 'git add $(cargo fmt --message-format short)' >> $HOOK
+echo 'echo ">> Done!"' >> $HOOK
+chmod +x $HOOK

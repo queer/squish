@@ -1,6 +1,6 @@
 [layers]
 alpine = "3.13"
-runner = { path = "./test/support/env-to-tmp-and-run.sh", target = "/app/run.sh" }
+runner = { path = "./test/support/005-env-to-tmp-and-run.sh", target = "/app/run.sh" }
 app = "./test/http-asm"
 
 [run]

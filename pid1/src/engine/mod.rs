@@ -157,11 +157,11 @@ where
         } else {
             println!(">> mount is not a directory or file");
         }
-        bind_mount(
-            path,
-            &target,
-            MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
-        )?;
+        let mut bind_flags = MsFlags::MS_NOATIME | MsFlags::MS_NOSUID;
+        if !matches!(layer.rw(), Some(true)) {
+            bind_flags = bind_flags | MsFlags::MS_RDONLY;
+        }
+        bind_mount(path, &target, bind_flags)?;
     } else {
         println!(">> mount didn't exist");
     }

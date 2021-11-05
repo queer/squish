@@ -31,16 +31,20 @@ impl Squishfile {
             // Easiest way to detect local paths -- generic labels means we
             // can't resolve every possible path
             .filter(|(_k, v)| match v {
+                // We only want to match layer specs that have a path and no
+                // version.
                 &&LayerSpec {
                     version: None,
                     path: Some(_),
                     target: _,
+                    rw: _,
                 } => true,
                 _ => false,
             })
             // This is safe because we just checked it
             .map(|(k, v)| match fs::canonicalize(v.path.as_ref().unwrap()) {
                 Ok(path) => {
+                    // Resolve the path to an absolute path
                     let path = path.as_path().display().to_string();
                     let new_target = match &v.target {
                         Some(target) => Some(target.clone()),
@@ -52,6 +56,7 @@ impl Squishfile {
                             version: None,
                             path: Some(path),
                             target: new_target,
+                            rw: v.rw().clone(),
                         },
                     )
                 }
@@ -80,8 +85,10 @@ impl Into<String> for Squishfile {
 #[derive(Deserialize, Serialize, Getters, Debug, Clone)]
 pub struct LayerSpec {
     version: Option<String>,
+    // TODO: Don't assume path is always valid UTF-8?
     path: Option<String>,
     target: Option<String>,
+    rw: Option<bool>,
 }
 
 #[derive(Deserialize, Serialize, Getters, Debug)]
@@ -153,18 +160,23 @@ pub fn parse_str<'a, T: Into<&'a str>>(squishfile: T) -> Result<Squishfile, Box<
 
 fn parse_layer(value: &toml::Value) -> Result<LayerSpec, Box<dyn Error>> {
     match value.as_str() {
+        // If the layer spec is just a string, we try to resolve it to a local
+        // path if possible. In this case, the file is NOT intended to be
+        // mounted rw, so we always set rw = Some(false).
         Some(maybe_path) => {
             if maybe_path.starts_with("./") || maybe_path.starts_with("../") {
                 Ok(LayerSpec {
                     version: None,
                     path: Some(maybe_path.to_string()),
                     target: None,
+                    rw: Some(false),
                 })
             } else {
                 Ok(LayerSpec {
                     version: Some(maybe_path.to_string()),
                     path: None,
                     target: None,
+                    rw: Some(false),
                 })
             }
         }

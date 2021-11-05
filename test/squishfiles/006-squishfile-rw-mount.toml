@@ -1,0 +1,19 @@
+[layers]
+alpine = "3.14"
+cargo-toml = { path = "./Cargo.toml", target = "/app/Cargo.toml" }
+scratch-file = { path = "./test/support/006-scratch", target = "/app/scratch", rw = true }
+runner = { path = "./test/support/006-rewrite-mounted-file.sh", target = "/app/run.sh" }
+app = "./test/http-asm"
+
+[run]
+command = "/app/run.sh"
+args = []
+
+[env]
+KEY = "value"
+IN_SQUISH_CONTAINER = "true"
+
+[[ports]]
+container = 2000
+host = 42069
+protocol = "tcp"
