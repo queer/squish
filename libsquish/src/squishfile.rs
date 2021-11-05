@@ -119,7 +119,6 @@ pub fn parse_str<'a, T: Into<&'a str>>(squishfile: T) -> Result<Squishfile, Box<
         None => HashMap::new(),
     };
     let ports: Vec<Port> = match table.get("ports") {
-        // TODO: Handle error better
         Some(ports) => ports
             .as_array()
             .expect("ports not array")
