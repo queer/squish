@@ -72,7 +72,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             squishfile.resolve_paths();
 
             // Send to daemon
-            let res = client::post("/containers/create", Some(serde_json::to_string(&squishfile)?)).await?;
+            let res = client::post(
+                "/containers/create",
+                Some(serde_json::to_string(&squishfile)?),
+            )
+            .await?;
             let ids: serde_json::Value = serde_json::from_str(res.as_str())?;
             for id in ids.as_array().unwrap() {
                 println!("{}", id.as_str().unwrap());

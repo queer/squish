@@ -12,7 +12,7 @@ use std::process::{Command, Stdio};
 use libsquish::squishfile::Squishfile;
 use nix::fcntl;
 use nix::sys::memfd;
-use nix::unistd::{Pid, Whence, lseek};
+use nix::unistd::{lseek, Pid, Whence};
 
 pub const USER_AGENT: &'static str = "squish (https://github.com/queer/squish)";
 
@@ -30,7 +30,10 @@ pub async fn spawn_container(
     // Write squishfile into a memfd that's inherited by child processes
     let mut memfd_name = format!("squishfile-{}", id).as_bytes().to_vec();
     memfd_name.push(0);
-    let memfd = memfd::memfd_create(&CStr::from_bytes_with_nul(&memfd_name)?, memfd::MemFdCreateFlag::empty())?;
+    let memfd = memfd::memfd_create(
+        &CStr::from_bytes_with_nul(&memfd_name)?,
+        memfd::MemFdCreateFlag::empty(),
+    )?;
 
     // Safety: We just created the fd so we know it exists
     let mut memfd_file = unsafe { File::from_raw_fd(memfd) };
