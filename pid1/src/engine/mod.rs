@@ -147,14 +147,13 @@ where
     // Yeah this is technically racy, but literally who cares?
     if mount_path.exists() {
         let meta = fs::metadata(path)?;
+        let target_path = Path::new(&target);
         if meta.is_dir() {
-            touch_dir(&target)?;
+            touch_dir(&target_path)?;
         } else if meta.is_file() {
-            let target_path = Path::new(&target);
-            // TODO: Do this better
-            let parent = target_path.parent().unwrap().to_str().unwrap().to_string();
+            let parent = target_path.parent().unwrap();
             touch_dir(&parent)?;
-            touch(&target)?;
+            touch(target_path)?;
         } else {
             println!(">> mount is not a directory or file");
         }
@@ -194,14 +193,14 @@ fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<d
     Ok(())
 }
 
-fn touch(path: &String) -> Result<(), Box<dyn Error>> {
+fn touch(path: &Path) -> Result<(), Box<dyn Error>> {
     match OpenOptions::new().create(true).write(true).open(path) {
         Ok(_) => Ok(()),
         Err(e) => Err(Box::new(e)),
     }
 }
 
-fn touch_dir(path: &String) -> Result<(), Box<dyn Error>> {
+fn touch_dir(path: &Path) -> Result<(), Box<dyn Error>> {
     match fs::create_dir_all(path) {
         Ok(_) => Ok(()),
         Err(e) => Err(Box::new(e)),
@@ -217,7 +216,6 @@ fn run_in_container(squishfile: &Squishfile) {
         squishfile.run().args()
     );
 
-    // TODO: Set env vars here
     std::process::Command::new(squishfile.run().command())
         .envs(squishfile.env())
         .args(squishfile.run().args())
