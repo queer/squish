@@ -3,12 +3,16 @@ pub mod containers;
 pub mod slirp;
 
 use std::error::Error;
+use std::ffi::CStr;
 use std::fs::File;
 use std::io::Write;
+use std::os::unix::io::FromRawFd;
 use std::process::{Command, Stdio};
 
 use libsquish::squishfile::Squishfile;
-use nix::unistd::Pid;
+use nix::fcntl;
+use nix::sys::memfd;
+use nix::unistd::{Pid, Whence, lseek};
 
 pub const USER_AGENT: &'static str = "squish (https://github.com/queer/squish)";
 
@@ -23,16 +27,29 @@ pub async fn spawn_container(
 ) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
 
-    // Write squishfile into /tmp to avoid leaking it to `ps`
-    let temp_path = format!("/tmp/{}.squishfile.toml", id);
-    let mut file = File::create(&temp_path)?;
-    file.write_all(
+    // Write squishfile into a memfd that's inherited by child processes
+    let mut memfd_name = format!("squishfile-{}", id).as_bytes().to_vec();
+    memfd_name.push(0);
+    let memfd = memfd::memfd_create(&CStr::from_bytes_with_nul(&memfd_name)?, memfd::MemFdCreateFlag::empty())?;
+    // TODO: Can we get rid of this unsafe somehow?
+    let mut memfd_file = unsafe { File::from_raw_fd(memfd) };
+    memfd_file.write_all(
         squishfile
             .to_json()
             .expect("impossible (couldn't ser squishfile!?)")
             .as_bytes(),
     )?;
+    // Turn off FD_CLOEXEC
+    let old_flags = fcntl::fcntl(memfd, fcntl::FcntlArg::F_GETFL)?;
+    let fixed_flags = old_flags & !(fcntl::FdFlag::FD_CLOEXEC.bits());
+    fcntl::fcntl(
+        memfd,
+        fcntl::FcntlArg::F_SETFD(fcntl::FdFlag::from_bits_truncate(fixed_flags)),
+    )?;
+    // Seek to zero
+    lseek(memfd, 0, Whence::SeekSet)?;
 
+    // Spawn stuff
     debug!("{}: pid1 setup", &id);
     let base_version = alpine::VERSION.to_string();
     let base_arch = alpine::ARCH.to_string();
@@ -53,8 +70,8 @@ pub async fn spawn_container(
             id.as_str(),
             "--path",
             containers::path_to(&id).as_str(),
-            "--squishfile",
-            temp_path.as_str(),
+            "--squishfile-memfd",
+            format!("{}", memfd).as_str(),
         ])
         .envs(squishfile.env())
         .output()?;

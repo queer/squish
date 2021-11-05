@@ -8,9 +8,9 @@ extern crate tokio;
 mod engine;
 
 use std::error::Error;
-use std::fs;
 use std::fs::File;
 use std::io::Read;
+use std::os::unix::io::FromRawFd;
 
 use clap::{App, Arg};
 use libsquish::squishfile::Squishfile;
@@ -41,19 +41,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .about("path to container directory"),
         )
         .arg(
-            Arg::new("squishfile")
-                .long("squishfile")
+            Arg::new("squishfile-memfd")
+                .long("squishfile-memfd")
                 .takes_value(true)
                 .required(true)
-                .about("squishfile to run"),
+                .about("squishfile memfd to run from"),
         )
         .get_matches();
 
-    let squishfile_path = matches.value_of("squishfile").unwrap().to_string();
-    let mut squishfile_json = File::open(&squishfile_path)?;
+    let squishfile_memfd: i32 = matches.value_of("squishfile-memfd").unwrap().to_string().parse()?;
+    let mut squishfile_json = unsafe { File::from_raw_fd(squishfile_memfd) };
     let mut squishfile = String::new();
     squishfile_json.read_to_string(&mut squishfile)?;
-    fs::remove_file(&squishfile_path)?;
 
     let pid = spawn_container(
         matches.value_of("rootfs").unwrap().to_string(),
