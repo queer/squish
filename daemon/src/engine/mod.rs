@@ -31,7 +31,8 @@ pub async fn spawn_container(
     let mut memfd_name = format!("squishfile-{}", id).as_bytes().to_vec();
     memfd_name.push(0);
     let memfd = memfd::memfd_create(&CStr::from_bytes_with_nul(&memfd_name)?, memfd::MemFdCreateFlag::empty())?;
-    // TODO: Can we get rid of this unsafe somehow?
+
+    // Safety: We just created the fd so we know it exists
     let mut memfd_file = unsafe { File::from_raw_fd(memfd) };
     memfd_file.write_all(
         squishfile

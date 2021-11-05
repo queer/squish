@@ -50,6 +50,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_matches();
 
     let squishfile_memfd: i32 = matches.value_of("squishfile-memfd").unwrap().to_string().parse()?;
+    // Safety: We created this in the daemon, and since this is cloned off of
+    //         the daemon process, we know that the fd exists.
     let mut squishfile_json = unsafe { File::from_raw_fd(squishfile_memfd) };
     let mut squishfile = String::new();
     squishfile_json.read_to_string(&mut squishfile)?;
