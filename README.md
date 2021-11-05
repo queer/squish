@@ -37,6 +37,13 @@ read-only.
 - Persistence of containers between daemon reboots
 - Getting a shell in a container
 
+## Local development
+
+1. Set up your environment by running `./setup.sh`
+2. Run the daemon with `env RUST_BACKTRACE=1 RUST_LOG=debug cargo run -p daemon`
+3. Create a container with `cargo run -p cli -- create test/squishfile.toml`
+4. You did it! Read the cli source to learn more commands
+
 ## Testing
 
 squish currently only has e2e tests. You can run them by running
