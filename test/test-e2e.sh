@@ -65,7 +65,7 @@ PASSED=0
 for f in test/e2e/*.sh; do
   SQUISHFILE=$(grep "SQUISHFILE_OVERRIDE=" $f | sed -e 's/# SQUISHFILE_OVERRIDE=//')
   SQUISHFILE="${SQUISHFILE:-./test/squishfiles/default.toml}"
-  log "Starting container from: ${SQUISHFILE}"
+  # log "Starting container from: ${SQUISHFILE}"
   
   echo -e -n "[$(date +%T)] Running $(basename $f)..."
 
