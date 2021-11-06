@@ -98,7 +98,7 @@ pub async fn spawn_container(
             format!("{}", child_pid).as_str(),
             "tap0",
         ])
-        // TODO: lol
+        // TODO: Should we be capturing these logs?
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()?;
