@@ -88,6 +88,6 @@ pub async fn request<S: Into<String>, T: Into<String>>(
         body.extend(&bytes);
         // io::stdout().write_all(&chunk).await?;
     }
-    // TODO: This should never panic, but verify anyway
+    // The server should never send back invalid UTF-8
     Ok(String::from_utf8(body).unwrap())
 }
