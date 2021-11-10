@@ -23,5 +23,5 @@ tar = "0.4.37"
 tokio = { version = "1.13.0", features = [ "full" ] }
 tokio-stream = { version = "0.1.8", features = [ "net" ] }
 tokio-util = { version = "0.6", features = ["io"] }
-warp = "0.3.1"
+warp = "0.3.2"
 yaml-rust = "0.4.5"
