@@ -6,6 +6,11 @@ be written `squish`.
 
 ## Why?
 
+squish was born out of frustration with existing container runtimes. They all
+have their drawbacks (rootful, lack of port rebinds, cache-unfriendliness, slow
+container starts, ...) that lead to usage thereof being a frustrating
+experience at best. squish attempts to address these shortcomings.
+
 Preliminary testing shows that squish can get a viable Alpine-rootfs container
 up in ~5ms. This is an **initial** figure, and will change over time.
 
