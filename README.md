@@ -14,6 +14,8 @@ experience at best. squish attempts to address these shortcomings.
 Preliminary testing shows that squish can get a viable Alpine-rootfs container
 up in ~5ms. This is an **initial** figure, and will change over time.
 
+![](https://cdn.mewna.xyz/2021/11/21/UFYXShJuPl1R6.png)
+
 ### Things that haven't been implemented but are planned
 
 squish also avoids the typical OCI-style container images. The goal of squish
