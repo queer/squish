@@ -494,9 +494,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hmac-sha256"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "341230c60f999f46f0c068fa8c35927f2407b78a5839923681fdc18f0bcb9941"
+checksum = "4bf358bbbbf03cbe18c2bc53c34b9f1dc212d2ce5cc56bf95ce34cec4359613b"
 
 [[package]]
 name = "http"
