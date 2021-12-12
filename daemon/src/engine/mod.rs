@@ -6,6 +6,7 @@ use std::error::Error;
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::Write;
+use std::net::TcpListener;
 use std::os::unix::io::FromRawFd;
 use std::process::{Command, Stdio};
 
@@ -26,6 +27,9 @@ pub async fn spawn_container(
     squishfile: Squishfile,
 ) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
+    for port in squishfile.ports() {
+        check_port_bind(port.host())?;
+    }
 
     // Write squishfile into a memfd that's inherited by child processes
     let mut memfd_name = format!("squishfile-{}", id).as_bytes().to_vec();
@@ -125,4 +129,10 @@ pub async fn spawn_container(
     }
 
     Ok((Pid::from_raw(child_pid), Pid::from_raw(slirp_pid)))
+}
+
+fn check_port_bind(port: &u16) -> Result<(), Box<dyn Error + Send + Sync>> {
+    TcpListener::bind(("127.0.0.1".to_string(), *port))
+        .map(|_| ())
+        .map_err(|e| e.into())
 }
