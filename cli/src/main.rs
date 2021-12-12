@@ -14,7 +14,7 @@ use libsquish::squishfile;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let matches = App::new("squish")
-        .arg(Arg::new("debug").long("debug").short('d').about(""))
+        .arg(Arg::new("debug").long("debug").short('d').help(""))
         .subcommand(App::new("ps").about("List running containers"))
         .subcommand(
             App::new("create")

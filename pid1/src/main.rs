@@ -24,28 +24,28 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .long("rootfs")
                 .takes_value(true)
                 .required(true)
-                .about("path to rootfs"),
+                .help("path to rootfs"),
         )
         .arg(
             Arg::new("id")
                 .long("id")
                 .takes_value(true)
                 .required(true)
-                .about("container id"),
+                .help("container id"),
         )
         .arg(
             Arg::new("path")
                 .long("path")
                 .takes_value(true)
                 .required(true)
-                .about("path to container directory"),
+                .help("path to container directory"),
         )
         .arg(
             Arg::new("squishfile-memfd")
                 .long("squishfile-memfd")
                 .takes_value(true)
                 .required(true)
-                .about("squishfile memfd to run from"),
+                .help("squishfile memfd to run from"),
         )
         .get_matches();
 
@@ -55,7 +55,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .to_string()
         .parse()?;
     // Safety: We created this in the daemon, and since this is cloned off of
-    //         the daemon process, we know that the fd exists.
+    //         the daemon process, we know that the fd exists. Since the daemon
+    //         disables FD_CLOEXEC before forking, we know that the fd is
+    //         guaranteed to exist.
     let mut squishfile_json = unsafe { File::from_raw_fd(squishfile_memfd) };
     let mut squishfile = String::new();
     squishfile_json.read_to_string(&mut squishfile)?;
