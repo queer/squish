@@ -13,5 +13,5 @@ clap = "3.0.0-rc.3"
 hyper = { version = "0.14.16", features = [ "stream" ] }
 hyperlocal = "0.8.0"
 serde = "1.0.131"
-serde_json = "1.0.72"
+serde_json = "1.0.73"
 tokio = { version = "1.14.0", features = [ "full" ] }
