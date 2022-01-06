@@ -24,20 +24,20 @@ of SDKs it uses. At container runtime, the various SDKs are bind-mounted into
 the container dynamically. Both the rootfs and all SDK layers are mounted
 read-only.
 
-## What works?
+## Roadmap
 
-- **Read-only** Alpine rootfs
-- Basic slirp4netns-based networking
-- Listing running containers
-- File and directory bind-mounts
-- Running without root
-- Port bindings
-
-### What doesn't work? aka roadmap
-
-- Networking between containers
-- Downloading layers from a remote source
-- Automagically✨ unpacking zips and tarballs
+Feature               | Description                                | State
+----------------------|--------------------------------------------|------
+Alpine                | Read-only Alpine rootfs                    | ✔️
+Networking            | slirp4netns networking + port binds        | ✔️
+Mounts                | Bind-mount files and directories ro and rw | ✔️
+Rootless              | Containers without root                    | ✔️
+Container networking  | Inter-container networking                 | TODO
+Cgroups               | Resource limitations etc                   | TODO
+Systemd cgroup driver | Set up cgroups via systemd                 | TODO
+Layer downloads       | Download layers via HTTP                   | TODO
+Seccomp               | Syscall filtering                          | TODO
+Dynamic port rebinds  | (Re)bind container ports at runtime        | TODO
 
 ### What won't be implemented?
 
