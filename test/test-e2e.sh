@@ -34,8 +34,8 @@ stop_container() {
   fi
 }
 
-log "Running quiet build..."
-cargo -q build
+log "Running build..."
+cargo build
 
 # Run daemon
 cargo -q run -p daemon &
