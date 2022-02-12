@@ -15,14 +15,6 @@ pub struct RunningContainer {
     pub pid: i32,
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
-
 /// Returns the current time in milliseconds since the UNIX epoch.
 pub fn now() -> Result<u128, Box<dyn Error>> {
     Ok(SystemTime::now()
