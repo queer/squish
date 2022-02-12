@@ -70,9 +70,12 @@ pub async fn download_base_image(
     let docs = YamlLoader::load_from_str(manifest_text.as_str())?;
     let manifest = &docs[0];
     if let Some(vec) = manifest.as_vec() {
-        let maybe_rootfs_manifest = vec
-            .iter()
-            .find(|yaml| matches!(yaml["flavor"].as_str(), Some("minirootfs")));
+        let maybe_rootfs_manifest = vec.iter().find(|yaml| {
+            matches!(
+                yaml["flavor"].as_str(),
+                Some("minirootfs") | Some("alpine-minirootfs")
+            )
+        });
         if let Some(rootfs_manifest) = maybe_rootfs_manifest {
             info!("found alpine minirootfs! downloading...");
             let tarball = download_rootfs(rootfs_manifest, version, arch).await?;
