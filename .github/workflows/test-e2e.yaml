@@ -16,8 +16,10 @@ jobs:
       - name: Install latest stable Rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
+          toolchain: stable
+          override: true
       - uses: Swatinem/rust-cache@v1
+        with:
+          key: e2e
       - name: Run e2e tests
         run: ./test/test-e2e.sh
