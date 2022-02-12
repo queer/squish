@@ -79,6 +79,10 @@ pub async fn download_base_image(
             extract_tarball(tarball, current_rootfs(version, arch))?;
             setup_rootfs(current_rootfs(version, arch))
         } else {
+            error!(
+                "expected alpine minirootfs in manifest, but manifest was\n{}",
+                manifest_text
+            );
             Err(Box::new(SquishError::AlpineManifestMissing))
         }
     } else {
