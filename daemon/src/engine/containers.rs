@@ -24,12 +24,12 @@ pub struct Container {
     pub created_at: u128,
 }
 
-impl Into<libsquish::RunningContainer> for &Container {
-    fn into(self) -> libsquish::RunningContainer {
+impl From<&Container> for libsquish::RunningContainer {
+    fn from(container: &Container) -> Self {
         libsquish::RunningContainer {
-            id: self.id.clone(),
-            name: self.name.clone(),
-            pid: self.pid.as_raw(),
+            id: container.id.clone(),
+            name: container.name.clone(),
+            pid: container.pid.into(),
         }
     }
 }
@@ -66,20 +66,20 @@ impl ContainerState {
         &mut self,
         pid: nix::unistd::Pid,
         slirp_pid: nix::unistd::Pid,
-        id: &String,
+        id: &str,
         name: String,
     ) -> Result<(), Box<dyn Error + '_>> {
         self.id_map.insert(
-            id.clone(),
+            id.to_string(),
             Container {
                 name,
-                id: id.clone(),
+                id: id.to_string(),
                 pid,
                 slirp_pid,
                 created_at: libsquish::now()?,
             },
         );
-        self.pid_id_map.insert(pid, id.clone());
+        self.pid_id_map.insert(pid, id.to_string());
         Ok(())
     }
 
@@ -90,10 +90,10 @@ impl ContainerState {
     /// general substring match.
     pub fn fuzzy_remove_container(
         &mut self,
-        partial_id_or_name: &String,
+        partial_id_or_name: &str,
     ) -> Result<Vec<String>, Box<dyn Error + '_>> {
         let matches: Vec<&Container> = (&self.id_map)
-            .into_iter()
+            .iter()
             .filter(|(id, container)| {
                 id.starts_with(partial_id_or_name) || container.name.starts_with(partial_id_or_name)
             })
@@ -108,8 +108,8 @@ impl ContainerState {
     }
 
     /// Remove the container with the given id.
-    pub fn remove_container(&mut self, id: &String) -> Result<(), Box<dyn Error + '_>> {
-        self.remove_all_containers(vec![id.clone()])?;
+    pub fn remove_container(&mut self, id: &str) -> Result<(), Box<dyn Error + '_>> {
+        self.remove_all_containers(vec![id.to_string()])?;
         Ok(())
     }
 
@@ -188,6 +188,6 @@ fn cleanup_container(id: String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn path_to(id: &String) -> String {
+pub fn path_to(id: &str) -> String {
     format!("container/{}", id)
 }

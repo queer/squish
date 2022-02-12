@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use tokio::time::sleep;
 
-const URL: &'static str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.11/slirp4netns-x86_64";
+const URL: &str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.11/slirp4netns-x86_64";
 
 /// Downloads the current slirp4netns binary. This caches in the same directory
 /// as the Alpine rootfs images.
@@ -37,7 +37,7 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send
         .write(true)
         .create_new(true)
         .open(&output_path)?;
-    output_file.write(&slirp_bytes)?;
+    output_file.write_all(&slirp_bytes)?;
     fs::set_permissions(output_path, Permissions::from_mode(0o755))?;
     // eprintln!("{:o}", output_file.metadata()?.permissions().mode());
     Ok(output_path)
@@ -45,7 +45,7 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send
 
 /// Adds a port-forward to the given slirp4netns instance via its socket.
 pub async fn add_port_forward(
-    socket: &String,
+    socket: &str,
     host: &u16,
     container: &u16,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
@@ -72,19 +72,16 @@ pub async fn add_port_forward(
 
 /// Executes a slirp4netns command over the given socket.
 pub async fn slirp_exec(
-    slirp_socket_path: &String,
+    slirp_socket_path: &str,
     command: &str,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
     info!("connecting to: {}", slirp_socket_path);
     let mut attempts: u8 = 0;
     let mut slirp_socket;
     loop {
-        match UnixStream::connect(slirp_socket_path) {
-            Ok(stream) => {
-                slirp_socket = stream;
-                break;
-            }
-            Err(_) => {}
+        if let Ok(s) = UnixStream::connect(slirp_socket_path) {
+            slirp_socket = s;
+            break;
         }
         attempts += 1;
         if attempts > 100 {

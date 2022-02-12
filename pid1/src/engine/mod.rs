@@ -21,9 +21,9 @@ use nix::unistd::{chdir, chroot, close, dup, dup2};
 /// - Bind-mount the app layer into `/app`
 /// - Run the container
 pub fn setup_and_run_container(
-    rootfs: &String,
-    path: &String,
-    _container_id: &String,
+    rootfs: &str,
+    path: &str,
+    _container_id: &str,
     squishfile: &Squishfile,
 ) -> Result<(), Box<dyn Error>> {
     let container_path = format!("{}/rootfs", &path);
@@ -53,7 +53,7 @@ pub fn setup_and_run_container(
 
     // Bindmount rootfs ro
     bind_mount(
-        &rootfs,
+        rootfs,
         &container_path,
         MsFlags::MS_RDONLY | MsFlags::MS_NOATIME | MsFlags::MS_NOSUID,
     )?;
@@ -87,14 +87,14 @@ pub fn setup_and_run_container(
     chroot(container_path.as_str()).expect("couldn't chroot!?");
     chdir("/").expect("couldn't chdir to /!?");
 
-    run_in_container(&squishfile);
+    run_in_container(squishfile);
     println!(">> done!");
     Ok(())
 }
 
 fn bind_mount_layer<TO>(
-    container_path: &String,
-    layer_name: &String,
+    container_path: &str,
+    layer_name: &str,
     layer: &LayerSpec,
     target_override: Option<TO>,
 ) -> Result<(), Box<dyn Error>>
@@ -149,17 +149,17 @@ where
         let meta = fs::metadata(path)?;
         let target_path = Path::new(&target);
         if meta.is_dir() {
-            touch_dir(&target_path)?;
+            touch_dir(target_path)?;
         } else if meta.is_file() {
             let parent = target_path.parent().unwrap();
-            touch_dir(&parent)?;
+            touch_dir(parent)?;
             touch(target_path)?;
         } else {
             println!(">> mount is not a directory or file");
         }
         let mut bind_flags = MsFlags::MS_NOATIME | MsFlags::MS_NOSUID;
         if !matches!(layer.rw(), Some(true)) {
-            bind_flags = bind_flags | MsFlags::MS_RDONLY;
+            bind_flags |= MsFlags::MS_RDONLY;
         }
         bind_mount(path, &target, bind_flags)?;
     } else {
@@ -168,24 +168,18 @@ where
     Ok(())
 }
 
-fn bind_mount_dev(dev: &'static str, target: &String) -> Result<(), Box<dyn Error>> {
+fn bind_mount_dev(dev: &'static str, target: &str) -> Result<(), Box<dyn Error>> {
     println!(">> bindmount dev {} -> {}", dev, target);
-    mount(
-        Some(dev),
-        target.as_str(),
-        Some(""),
-        MsFlags::MS_BIND,
-        Some(""),
-    )?;
+    mount(Some(dev), target, Some(""), MsFlags::MS_BIND, Some(""))?;
     Ok(())
 }
 
-fn bind_mount(src: &String, target: &String, flags: MsFlags) -> Result<(), Box<dyn Error>> {
+fn bind_mount(src: &str, target: &str, flags: MsFlags) -> Result<(), Box<dyn Error>> {
     println!(">> bindmount {} -> {}", src, target);
 
     mount(
-        Some(src.as_str()),
-        target.as_str(),
+        Some(src),
+        target,
         Some(""),
         MsFlags::MS_BIND | flags,
         Some(""),

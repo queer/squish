@@ -44,10 +44,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 max_name = max(container.name.len(), max_name);
             }
             println!(
-                "{:id_width$} {:name_width$} {}",
+                "{:id_width$} {:name_width$} PID",
                 "ID",
                 "NAME",
-                "PID",
                 id_width = 7,
                 name_width = max_name
             );

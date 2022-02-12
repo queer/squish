@@ -15,7 +15,7 @@ use nix::fcntl;
 use nix::sys::memfd;
 use nix::unistd::{lseek, Pid, Whence};
 
-pub const USER_AGENT: &'static str = "squish (https://github.com/queer/squish)";
+pub const USER_AGENT: &str = "squish (https://github.com/queer/squish)";
 
 /// (container pid, slirp pid)
 /// Spawns a container, taking in the new container's ID and the squishfile
@@ -23,7 +23,7 @@ pub const USER_AGENT: &'static str = "squish (https://github.com/queer/squish)";
 /// spawns the `pid1` binary, starts the slirp4netns process, and then applies
 /// all port forwards. A tuple of pids (container, slirp4netns) is returned.
 pub async fn spawn_container(
-    id: &String,
+    id: &str,
     squishfile: Squishfile,
 ) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
     // TODO: Ensure layers are cached
@@ -35,7 +35,7 @@ pub async fn spawn_container(
     let mut memfd_name = format!("squishfile-{}", id).as_bytes().to_vec();
     memfd_name.push(0);
     let memfd = memfd::memfd_create(
-        &CStr::from_bytes_with_nul(&memfd_name)?,
+        CStr::from_bytes_with_nul(&memfd_name)?,
         memfd::MemFdCreateFlag::empty(),
     )?;
 
@@ -69,15 +69,15 @@ pub async fn spawn_container(
             .expect("No alpine version present!?"),
         None => &base_version,
     };
-    alpine::download_base_image(&alpine_version, &base_arch).await?;
+    alpine::download_base_image(alpine_version, &base_arch).await?;
     let pid1 = Command::new("target/debug/pid1")
         .args(vec![
             "--rootfs",
-            alpine::current_rootfs(&alpine_version, &base_arch).as_str(),
+            alpine::current_rootfs(alpine_version, &base_arch).as_str(),
             "--id",
-            id.as_str(),
+            id,
             "--path",
-            containers::path_to(&id).as_str(),
+            containers::path_to(id).as_str(),
             "--squishfile-memfd",
             format!("{}", memfd).as_str(),
         ])

@@ -15,7 +15,7 @@ pub struct Squishfile {
 }
 
 impl Squishfile {
-    fn update_layer(&mut self, layer: &String, new_data: &LayerSpec) {
+    fn update_layer(&mut self, layer: &str, new_data: &LayerSpec) {
         self.layers.insert(layer.to_string(), new_data.clone());
     }
 
@@ -30,33 +30,30 @@ impl Squishfile {
             .iter()
             // Easiest way to detect local paths -- generic labels means we
             // can't resolve every possible path
-            .filter(|(_k, v)| match v {
-                // We only want to match layer specs that have a path and no
-                // version.
-                &&LayerSpec {
-                    version: None,
-                    path: Some(_),
-                    target: _,
-                    rw: _,
-                } => true,
-                _ => false,
+            .filter(|(_k, v)| {
+                matches!(
+                    v,
+                    &&LayerSpec {
+                        version: None,
+                        path: Some(_),
+                        target: _,
+                        rw: _,
+                    }
+                )
             })
             // This is safe because we just checked it
             .map(|(k, v)| match fs::canonicalize(v.path.as_ref().unwrap()) {
                 Ok(path) => {
                     // Resolve the path to an absolute path
                     let path = path.as_path().display().to_string();
-                    let new_target = match &v.target {
-                        Some(target) => Some(target.clone()),
-                        None => None,
-                    };
+                    let new_target = v.target.as_ref().cloned();
                     (
                         k.clone(),
                         LayerSpec {
                             version: None,
                             path: Some(path),
                             target: new_target,
-                            rw: v.rw().clone(),
+                            rw: *v.rw(),
                         },
                     )
                 }
@@ -76,9 +73,10 @@ impl Squishfile {
     }
 }
 
-impl Into<String> for Squishfile {
-    fn into(self) -> String {
-        toml::to_string(&self).expect(format!("unable to serialise config: {:?}", self).as_str())
+impl From<Squishfile> for String {
+    fn from(squishfile: Squishfile) -> Self {
+        toml::to_string(&squishfile)
+            .unwrap_or_else(|_| panic!("unable to serialise config: {:?}", squishfile))
     }
 }
 
