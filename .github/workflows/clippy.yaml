@@ -8,7 +8,7 @@ on:
       - mistress
 
 jobs:
-  run-tests:
+  run-clippy:
     if: github.actor != 'dependabot'
     runs-on: ubuntu-latest
     steps:
