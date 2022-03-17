@@ -8,26 +8,26 @@ mod client;
 use std::cmp::max;
 use std::error::Error;
 
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use libsquish::squishfile;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let matches = App::new("squish")
+    let matches = Command::new("squish")
         .arg(Arg::new("debug").long("debug").short('d').help(""))
-        .subcommand(App::new("ps").about("List running containers"))
+        .subcommand(Command::new("ps").about("List running containers"))
         .subcommand(
-            App::new("create")
+            Command::new("create")
                 .about("Create new containers")
                 .arg(Arg::new("squishfile").required(true)),
         )
         .subcommand(
-            App::new("validate")
+            Command::new("validate")
                 .about("Validate a squishfile")
                 .arg(Arg::new("squishfile").required(true)),
         )
         .subcommand(
-            App::new("stop")
+            Command::new("stop")
                 .about("Stop a container")
                 .arg(Arg::new("id").required(true)),
         )

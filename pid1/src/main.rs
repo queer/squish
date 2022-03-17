@@ -12,13 +12,13 @@ use std::fs::File;
 use std::io::Read;
 use std::os::unix::io::FromRawFd;
 
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use libsquish::squishfile::Squishfile;
 use nix::sched::{clone, CloneFlags};
 use rlimit::Resource;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let matches = App::new("pid1")
+    let matches = Command::new("pid1")
         .arg(
             Arg::new("rootfs")
                 .long("rootfs")
