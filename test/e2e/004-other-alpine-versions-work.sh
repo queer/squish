@@ -5,7 +5,7 @@
 # SQUISHFILE_OVERRIDE=./test/squishfiles/004-squishfile-3.13.toml
 
 FILE_CONTENTS=$(curl -s -o- localhost:42069/alpine-release)
-if [ "$FILE_CONTENTS" != "3.13.7" ]; then
-  echo "Expected Alpine 3.13.7, got:\n$FILE_CONTENTS"
+if [ "$FILE_CONTENTS" != "3.13.8" ]; then
+  echo "Expected Alpine 3.13.8, got:\n$FILE_CONTENTS"
   exit 1
 fi
