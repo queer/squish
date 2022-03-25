@@ -1,5 +1,6 @@
 pub mod alpine;
 pub mod containers;
+pub mod driver;
 pub mod slirp;
 
 use std::error::Error;
