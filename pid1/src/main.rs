@@ -96,11 +96,13 @@ fn spawn_container(
         }
     };
 
-    let callback =
-        move || match engine::setup_and_run_container(&rootfs, &path, &container_id, &squishfile) {
+    let callback = move || {
+        let engine = engine::Engine::new(&squishfile, &rootfs, &path, &container_id);
+        match engine.setup_container().unwrap().run_container() {
             Ok(_) => 0,
             _ => 1,
-        };
+        }
+    };
 
     let mut stack_vec = vec![0u8; stack_size];
     let stack: &mut [u8] = stack_vec.as_mut_slice();
