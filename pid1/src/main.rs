@@ -9,17 +9,17 @@ extern crate tokio;
 
 mod engine;
 
-use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::io::FromRawFd;
 
 use clap::{Arg, Command};
 use libsquish::squishfile::Squishfile;
+use libsquish::Result;
 use nix::sched::{clone, CloneFlags};
 use rlimit::Resource;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let matches = Command::new("pid1")
         .arg(
             Arg::new("rootfs")
@@ -80,7 +80,7 @@ fn spawn_container(
     path: String,
     container_id: String,
     squishfile: Squishfile,
-) -> Result<nix::unistd::Pid, Box<dyn Error>> {
+) -> Result<nix::unistd::Pid> {
     let stack_size = match Resource::STACK.get() {
         Ok((soft, _hard)) => {
             // debug!(

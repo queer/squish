@@ -1,9 +1,9 @@
-use std::error::Error;
 use std::vec;
 
 use hyper::Body;
 use hyper::{body::HttpBody, Client};
 use hyperlocal::{UnixClientExt, Uri};
+use libsquish::Result;
 
 #[derive(Debug)]
 pub enum Method {
@@ -14,38 +14,26 @@ pub enum Method {
     Delete,
 }
 
-pub async fn get<S: Into<String>>(route: S) -> Result<String, Box<dyn Error>> {
+pub async fn get<S: Into<String>>(route: S) -> Result<String> {
     request::<S, String>(Method::Get, route, None).await
 }
 
-pub async fn post<S: Into<String>, T: Into<String>>(
-    route: S,
-    body: Option<T>,
-) -> Result<String, Box<dyn Error>> {
+pub async fn post<S: Into<String>, T: Into<String>>(route: S, body: Option<T>) -> Result<String> {
     request(Method::Post, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn put<S: Into<String>, T: Into<String>>(
-    route: S,
-    body: Option<T>,
-) -> Result<String, Box<dyn Error>> {
+pub async fn put<S: Into<String>, T: Into<String>>(route: S, body: Option<T>) -> Result<String> {
     request(Method::Put, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn patch<S: Into<String>, T: Into<String>>(
-    route: S,
-    body: Option<T>,
-) -> Result<String, Box<dyn Error>> {
+pub async fn patch<S: Into<String>, T: Into<String>>(route: S, body: Option<T>) -> Result<String> {
     request(Method::Patch, route, body).await
 }
 
 #[allow(dead_code)]
-pub async fn delete<S: Into<String>, T: Into<String>>(
-    route: S,
-    body: Option<T>,
-) -> Result<String, Box<dyn Error>> {
+pub async fn delete<S: Into<String>, T: Into<String>>(route: S, body: Option<T>) -> Result<String> {
     request(Method::Delete, route, body).await
 }
 
@@ -53,7 +41,7 @@ pub async fn request<S: Into<String>, T: Into<String>>(
     method: Method,
     route: S,
     body: Option<T>,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<String> {
     let url: hyper::http::Uri = Uri::new("/tmp/squishd.sock", &route.into()).into();
     let client = Client::unix();
     let body = match body {

@@ -17,12 +17,12 @@ extern crate yaml_rust;
 
 use crate::engine::containers::ContainerState;
 
-use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use libsquish::SyncResult;
 use warp::hyper::body::Bytes;
 use warp::Filter;
 
@@ -33,7 +33,7 @@ mod util;
 #[cfg(unix)]
 #[tokio::main]
 
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn main() -> SyncResult<()> {
     use tokio::net::UnixListener;
     use tokio_stream::wrappers::UnixListenerStream;
 

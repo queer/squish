@@ -1,7 +1,6 @@
 use crate::engine::USER_AGENT;
 use crate::util::SquishError;
 
-use std::error::Error;
 use std::fs;
 use std::fs::Permissions;
 use std::io::{Read, Write};
@@ -10,13 +9,14 @@ use std::os::unix::prelude::PermissionsExt;
 use std::path::Path;
 use std::time::Duration;
 
+use libsquish::SyncResult;
 use tokio::time::sleep;
 
 const URL: &str = "https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.11/slirp4netns-x86_64";
 
 /// Downloads the current slirp4netns binary. This caches in the same directory
 /// as the Alpine rootfs images.
-pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send + Sync>> {
+pub async fn download_slirp4netns() -> SyncResult<&'static str> {
     // TODO: Version this
     let output_path = "cache/slirp4netns";
     if Path::new(output_path).exists() {
@@ -44,11 +44,7 @@ pub async fn download_slirp4netns() -> Result<&'static str, Box<dyn Error + Send
 }
 
 /// Adds a port-forward to the given slirp4netns instance via its socket.
-pub async fn add_port_forward(
-    socket: &str,
-    host: &u16,
-    container: &u16,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+pub async fn add_port_forward(socket: &str, host: &u16, container: &u16) -> SyncResult<String> {
     slirp_exec(
         socket,
         format!(
@@ -71,10 +67,7 @@ pub async fn add_port_forward(
 }
 
 /// Executes a slirp4netns command over the given socket.
-pub async fn slirp_exec(
-    slirp_socket_path: &str,
-    command: &str,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+pub async fn slirp_exec(slirp_socket_path: &str, command: &str) -> SyncResult<String> {
     info!("connecting to: {}", slirp_socket_path);
     let mut attempts: u8 = 0;
     let mut slirp_socket;
