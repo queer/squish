@@ -1,8 +1,6 @@
 use std::any::{Any, TypeId};
 use std::{error::Error, fmt::Display};
 
-pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
-
 #[derive(Debug)]
 pub enum SquishError {
     GenericError(Box<dyn std::error::Error + Send + Sync>),

@@ -1,11 +1,11 @@
 use super::cgroup;
-use crate::util::Result;
 
 use std::sync::Arc;
 use std::time::Duration;
 
 use dbus::arg::{AppendAll, ReadAll, RefArg, Variant};
 use dbus::nonblock::{Proxy, SyncConnection};
+use libsquish::Result;
 
 pub struct DbusDriver {
     conn: Arc<SyncConnection>,
@@ -90,8 +90,16 @@ impl<IS: Into<String> + Send + Sync + 'static> SystemdDbusDriver<IS> for DbusDri
                 Variant(Box::new(cgroup::detect_current_cgroup_slice_name().await?)),
             ),
             ("Delegate", Variant(Box::new(true))),
-            ("PIDs", Variant(Box::new(pids.clone()))),
+            // ("PIDs", Variant(Box::new(pids.clone()))),
             ("Description", Variant(Box::new(description.into()))),
+            (
+                "ExecStart",
+                Variant(Box::new((
+                    "ls".to_string(),
+                    vec!["ls".to_string(), "-lah".to_string()],
+                    true,
+                ))),
+            ),
         ];
         #[allow(clippy::type_complexity)]
         let aux: Vec<(&str, Vec<(&str, Variant<Box<dyn RefArg>>)>)> = vec![];
@@ -124,9 +132,9 @@ impl<IS: Into<String> + Send + Sync + 'static> SystemdDbusDriver<IS> for DbusDri
 #[cfg(test)]
 mod test {
     use super::{DbusDriver, SystemdDbusDriver};
-    use crate::util::Result;
+    use libsquish::Result;
 
-    const UNIT: &str = "squish-test.scope";
+    const UNIT: &str = "squish-test.service";
 
     #[tokio::test]
     pub async fn test_transient_unit_functionality() -> Result<()> {

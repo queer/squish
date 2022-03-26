@@ -1,8 +1,9 @@
-use crate::util::{Result, SquishError};
+use crate::util::SquishError;
 
 use std::path::Path;
 
 use async_recursion::async_recursion;
+use libsquish::Result;
 use tokio::fs;
 
 /// Detects the current cgroup. This is done by reading `/proc/self/cgroup` and
