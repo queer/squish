@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use haikunator::Haikunator;
+use libsquish::Result;
 use nix::sys::signal;
 use nix::sys::signal::kill;
 use nix::unistd::Pid;
@@ -68,7 +68,7 @@ impl ContainerState {
         slirp_pid: nix::unistd::Pid,
         id: &str,
         name: String,
-    ) -> Result<(), Box<dyn Error + '_>> {
+    ) -> Result<()> {
         self.id_map.insert(
             id.to_string(),
             Container {
@@ -88,10 +88,7 @@ impl ContainerState {
     /// based on starting characters. That is, a container is removed if its
     /// name or its id starts with the partial value passed in. This is not a
     /// general substring match.
-    pub fn fuzzy_remove_container(
-        &mut self,
-        partial_id_or_name: &str,
-    ) -> Result<Vec<String>, Box<dyn Error + '_>> {
+    pub fn fuzzy_remove_container(&mut self, partial_id_or_name: &str) -> Result<Vec<String>> {
         let matches: Vec<&Container> = (&self.id_map)
             .iter()
             .filter(|(id, container)| {
@@ -108,14 +105,14 @@ impl ContainerState {
     }
 
     /// Remove the container with the given id.
-    pub fn remove_container(&mut self, id: &str) -> Result<(), Box<dyn Error + '_>> {
+    pub fn remove_container(&mut self, id: &str) -> Result<()> {
         self.remove_all_containers(vec![id.to_string()])?;
         Ok(())
     }
 
     /// Remove all containers matching the ids in the list. This will kill the
     /// container and slirp4netns instances as a side effect.
-    pub fn remove_all_containers(&mut self, ids: Vec<String>) -> Result<(), Box<dyn Error + '_>> {
+    pub fn remove_all_containers(&mut self, ids: Vec<String>) -> Result<()> {
         for id in ids {
             let container = self.id_map.remove(&id);
             if let Some(container) = container {
@@ -134,7 +131,7 @@ impl ContainerState {
                         error!("Failed to kill container {}: {}", container.id, e);
                     }
                 }
-                cleanup_container(container.id.clone())?;
+                cleanup_container(container.id.as_str())?;
             }
         }
         Ok(())
@@ -173,7 +170,7 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
                         error!("Failed to remove container files for {}: {}", id, e);
                     }
                 }
-                match cleanup_container(id.to_string()) {
+                match cleanup_container(id) {
                     Ok(_) => info!("cleaned up dead container {}", pid.as_raw()),
                     Err(e) => error!("error cleaning up dead container {}: {}", pid.as_raw(), e),
                 }
@@ -182,8 +179,8 @@ pub async fn reap_children(state: Arc<Mutex<ContainerState>>) {
     }
 }
 
-fn cleanup_container(id: String) -> Result<(), Box<dyn Error>> {
-    fs::remove_dir_all(path_to(&id))?;
+fn cleanup_container(id: &str) -> Result<()> {
+    fs::remove_dir_all(path_to(id))?;
     fs::remove_file(format!("/tmp/slirp4netns-{}.sock", id))?;
     Ok(())
 }

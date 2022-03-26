@@ -1,3 +1,5 @@
+#![warn(clippy::needless_pass_by_value)]
+
 extern crate hyper;
 extern crate hyperlocal;
 extern crate serde_json;
@@ -6,13 +8,13 @@ extern crate tokio;
 mod client;
 
 use std::cmp::max;
-use std::error::Error;
 
 use clap::{Arg, Command};
 use libsquish::squishfile;
+use libsquish::Result;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let matches = Command::new("squish")
         .arg(Arg::new("debug").long("debug").short('d').help(""))
         .subcommand(Command::new("ps").about("List running containers"))

@@ -1,11 +1,11 @@
 use crate::{engine::USER_AGENT, util::SquishError};
 
-use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use libsquish::SyncResult;
 use yaml_rust::{Yaml, YamlLoader};
 
 /// The current version of Alpine that this squishd knows about.
@@ -48,10 +48,7 @@ pub fn base_url(version: &str, arch: &str) -> String {
 
 /// Download the base Alpine rootfs image. This will download and cache the
 /// rootfs image from a mirror (based on `base_url()`).
-pub async fn download_base_image(
-    version: &str,
-    arch: &str,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn download_base_image(version: &str, arch: &str) -> SyncResult<()> {
     if Path::new(&current_rootfs_tarball(version, arch)).exists() {
         info!("rootfs tarball already exists, not downloading again");
         return Ok(());
@@ -80,7 +77,7 @@ pub async fn download_base_image(
             info!("found alpine minirootfs! downloading...");
             let tarball = download_rootfs(rootfs_manifest, version, arch).await?;
             extract_tarball(tarball, current_rootfs(version, arch))?;
-            setup_rootfs(current_rootfs(version, arch))
+            setup_rootfs(&current_rootfs(version, arch))
         } else {
             error!(
                 "expected alpine minirootfs in manifest, but manifest was\n{}",
@@ -93,11 +90,7 @@ pub async fn download_base_image(
     }
 }
 
-async fn download_rootfs(
-    rootfs_manifest: &Yaml,
-    version: &str,
-    arch: &str,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+async fn download_rootfs(rootfs_manifest: &Yaml, version: &str, arch: &str) -> SyncResult<String> {
     match rootfs_manifest["file"].as_str() {
         Some(rootfs_filename) => {
             // minirootfs is a ~3MB tarball, so we can afford to hold
@@ -121,7 +114,7 @@ async fn download_rootfs(
     }
 }
 
-fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn Error + Send + Sync>> {
+fn extract_tarball(path: String, target_path: String) -> SyncResult<()> {
     info!("extracting alpine rootfs from {} to {}", path, target_path);
     let tarball = fs::File::open(path)?;
     let tar = flate2::read::GzDecoder::new(tarball);
@@ -130,7 +123,7 @@ fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn Error + Send + Sync>> {
+fn setup_rootfs(rootfs: &str) -> SyncResult<()> {
     // devices
     info!("setting up dummy devices");
     File::create(format!("{}/dev/null", rootfs))?;

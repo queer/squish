@@ -3,7 +3,6 @@ pub mod containers;
 pub mod driver;
 pub mod slirp;
 
-use std::error::Error;
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::Write;
@@ -12,6 +11,7 @@ use std::os::unix::io::FromRawFd;
 use std::process::{Command, Stdio};
 
 use libsquish::squishfile::Squishfile;
+use libsquish::SyncResult;
 use nix::fcntl;
 use nix::sys::memfd;
 use nix::unistd::{lseek, Pid, Whence};
@@ -23,10 +23,7 @@ pub const USER_AGENT: &str = "squish (https://github.com/queer/squish)";
 /// describing it. This function copies the squishfile to a temporary directory,
 /// spawns the `pid1` binary, starts the slirp4netns process, and then applies
 /// all port forwards. A tuple of pids (container, slirp4netns) is returned.
-pub async fn spawn_container(
-    id: &str,
-    squishfile: Squishfile,
-) -> Result<(Pid, Pid), Box<dyn Error + Send + Sync>> {
+pub async fn spawn_container(id: &str, squishfile: Squishfile) -> SyncResult<(Pid, Pid)> {
     // TODO: Ensure layers are cached
     for port in squishfile.ports() {
         check_port_bind(port.host())?;
@@ -132,7 +129,7 @@ pub async fn spawn_container(
     Ok((Pid::from_raw(child_pid), Pid::from_raw(slirp_pid)))
 }
 
-fn check_port_bind(port: &u16) -> Result<(), Box<dyn Error + Send + Sync>> {
+fn check_port_bind(port: &u16) -> SyncResult<()> {
     TcpListener::bind(("127.0.0.1".to_string(), *port))
         .map(|_| ())
         .map_err(|e| e.into())

@@ -1,10 +1,10 @@
-use std::error::Error;
 use std::fs::{self, OpenOptions};
 use std::os::unix::io::IntoRawFd;
 use std::path::Path;
 use std::process;
 
 use libsquish::squishfile::{LayerSpec, Squishfile};
+use libsquish::Result;
 use nix::mount::{mount, MsFlags};
 use nix::unistd::{chdir, chroot, close, dup, dup2};
 
@@ -25,7 +25,7 @@ pub fn setup_and_run_container(
     path: &str,
     _container_id: &str,
     squishfile: &Squishfile,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let container_path = format!("{}/rootfs", &path);
     fs::create_dir_all(&container_path).expect("couldn't create rootfs directory!");
 
@@ -97,7 +97,7 @@ fn bind_mount_layer<TO>(
     layer_name: &str,
     layer: &LayerSpec,
     target_override: Option<TO>,
-) -> Result<(), Box<dyn Error>>
+) -> Result<()>
 where
     TO: Into<String>,
 {
@@ -168,13 +168,13 @@ where
     Ok(())
 }
 
-fn bind_mount_dev(dev: &'static str, target: &str) -> Result<(), Box<dyn Error>> {
+fn bind_mount_dev(dev: &'static str, target: &str) -> Result<()> {
     println!(">> bindmount dev {} -> {}", dev, target);
     mount(Some(dev), target, Some(""), MsFlags::MS_BIND, Some(""))?;
     Ok(())
 }
 
-fn bind_mount(src: &str, target: &str, flags: MsFlags) -> Result<(), Box<dyn Error>> {
+fn bind_mount(src: &str, target: &str, flags: MsFlags) -> Result<()> {
     println!(">> bindmount {} -> {}", src, target);
 
     mount(
@@ -187,14 +187,14 @@ fn bind_mount(src: &str, target: &str, flags: MsFlags) -> Result<(), Box<dyn Err
     Ok(())
 }
 
-fn touch(path: &Path) -> Result<(), Box<dyn Error>> {
+fn touch(path: &Path) -> Result<()> {
     match OpenOptions::new().create(true).write(true).open(path) {
         Ok(_) => Ok(()),
         Err(e) => Err(Box::new(e)),
     }
 }
 
-fn touch_dir(path: &Path) -> Result<(), Box<dyn Error>> {
+fn touch_dir(path: &Path) -> Result<()> {
     match fs::create_dir_all(path) {
         Ok(_) => Ok(()),
         Err(e) => Err(Box::new(e)),
