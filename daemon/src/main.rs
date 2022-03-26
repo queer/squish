@@ -1,3 +1,5 @@
+#![warn(clippy::needless_pass_by_value)]
+
 extern crate flate2;
 extern crate haikunator;
 extern crate hex;
@@ -30,6 +32,7 @@ mod util;
 
 #[cfg(unix)]
 #[tokio::main]
+
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     use tokio::net::UnixListener;
     use tokio_stream::wrappers::UnixListenerStream;

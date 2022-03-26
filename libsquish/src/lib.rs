@@ -1,3 +1,5 @@
+#![warn(clippy::needless_pass_by_value)]
+
 pub mod squishfile;
 
 use std::error::Error;

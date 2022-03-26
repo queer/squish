@@ -1,3 +1,5 @@
+#![warn(clippy::needless_pass_by_value)]
+
 extern crate clap;
 extern crate futures;
 extern crate nix;

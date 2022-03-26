@@ -80,7 +80,7 @@ pub async fn download_base_image(
             info!("found alpine minirootfs! downloading...");
             let tarball = download_rootfs(rootfs_manifest, version, arch).await?;
             extract_tarball(tarball, current_rootfs(version, arch))?;
-            setup_rootfs(current_rootfs(version, arch))
+            setup_rootfs(&current_rootfs(version, arch))
         } else {
             error!(
                 "expected alpine minirootfs in manifest, but manifest was\n{}",
@@ -130,7 +130,7 @@ fn extract_tarball(path: String, target_path: String) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-fn setup_rootfs(rootfs: String) -> Result<(), Box<dyn Error + Send + Sync>> {
+fn setup_rootfs(rootfs: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
     // devices
     info!("setting up dummy devices");
     File::create(format!("{}/dev/null", rootfs))?;

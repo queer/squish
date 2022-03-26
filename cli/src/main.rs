@@ -1,3 +1,5 @@
+#![warn(clippy::needless_pass_by_value)]
+
 extern crate hyper;
 extern crate hyperlocal;
 extern crate serde_json;
