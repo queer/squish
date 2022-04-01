@@ -56,18 +56,6 @@ Dynamic port rebinds  | (Re)bind container ports at runtime        | TODO
 squish currently only has e2e tests. You can run them by running
 `./test/test-e2e.sh`.
 
-## Layers and binaries and images and whatnot
-
-squish doesn't have OCI-style container images. Since what actually runs is a
-bunch of bind-mounted-together SDKs, your "image" that you push is just a
-binary (or tarball, or ...). When actually running a container, you specify its
-layer names + tags in your `squishfile.toml`, as well as optional run + env +
-port sections -- and the daemon can put all of it together to figure out what
-layers are needed and what command to run. This may seem a bit
-counter-intuitive at first, but it's useful for ex. adding a custom `debug`
-layer to containers at creation time, ensuring you have the same tools present
-in a container no matter what source layers make it up.
-
 ## Where did the name come from?
 
 The idea started out as making something like [Flatpak](https://flatpak.org/)
