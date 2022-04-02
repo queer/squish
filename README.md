@@ -26,18 +26,19 @@ read-only.
 
 ## Roadmap
 
-Feature               | Description                                | State
-----------------------|--------------------------------------------|------
-Alpine                | Read-only Alpine rootfs                    | ✔️
-Networking            | slirp4netns networking + port binds        | ✔️
-Mounts                | Bind-mount files and directories ro and rw | ✔️
-Rootless              | Containers without root                    | ✔️
-Container networking  | Inter-container networking                 | TODO
-Cgroups               | Resource limitations etc                   | TODO
-Systemd cgroup driver | Set up cgroups via systemd                 | TODO
-Layer downloads       | Download layers via HTTP                   | TODO
-Seccomp               | Syscall filtering                          | TODO
-Dynamic port rebinds  | (Re)bind container ports at runtime        | TODO
+Feature               | Description                                 | State
+----------------------|---------------------------------------------|------
+Alpine                | Read-only Alpine rootfs                     | ✔️
+Networking            | slirp4netns networking + port binds         | ✔️
+Mounts                | Bind-mount files and directories ro and rw  | ✔️
+Rootless              | Containers without root                     | ✔️
+Container networking  | Inter-container networking                  | TODO
+Cgroups               | Resource limitations etc                    | TODO
+Systemd cgroup driver | Set up cgroups via systemd                  | TODO
+Layer downloads       | Download layers via HTTP                    | TODO
+Seccomp               | Syscall filtering                           | TODO
+Dynamic port rebinds  | (Re)bind container ports at runtime         | TODO
+/proc & /sys driver   | FUSE vfs driver to safely mock /proc & /sys | TODO
 
 ### What won't be implemented?
 

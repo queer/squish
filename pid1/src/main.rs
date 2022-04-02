@@ -110,14 +110,27 @@ fn spawn_container(
     let pid = clone(
         Box::new(callback),
         stack,
+        // Oh boy, where do I even begin with this?
+        // If you read the man pages for clone(2), a common sentence to see is:
+        //
+        // > Only a privileged process (CAP_SYS_ADMIN) can employ CLONE_NEWXXX.
+        //
+        // It turns out that this is just... not true? I don't know if it's
+        // because my system is configured weirdly, or if it's because I'm
+        // somehow accidentally invoking sudo(1) or something else, I honestly
+        // don't know.
+        //
+        // This shouldn't work. The man pages say so.
+        //
+        // But it does.
         CloneFlags::CLONE_NEWPID
             | CloneFlags::CLONE_NEWUTS
             | CloneFlags::CLONE_NEWNS
             | CloneFlags::CLONE_NEWNET
-            | CloneFlags::CLONE_NEWUSER,
+            | CloneFlags::CLONE_NEWUSER
+            | CloneFlags::CLONE_NEWCGROUP,
         None,
-    )
-    .unwrap();
+    )?;
     if (pid.as_raw() as i32) == -1 {
         println!("clone error");
         println!("{:?}", std::io::Error::last_os_error());

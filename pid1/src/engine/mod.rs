@@ -112,6 +112,7 @@ impl<'a> Engine<'a> {
                 )?;
             }
         }
+
         Ok(self)
     }
 
@@ -119,6 +120,17 @@ impl<'a> Engine<'a> {
         // chroot!
         chroot(self.container_rootfs_path.as_str()).expect("couldn't chroot!?");
         chdir("/").expect("couldn't chdir to /!?");
+
+        println!(">> listing /proc");
+        for entry in fs::read_dir("/proc")? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                println!("{}/", path.display());
+            } else {
+                println!("{}", path.display());
+            }
+        }
 
         self.run_in_container()?;
         println!(">> done!");
