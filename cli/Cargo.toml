@@ -12,6 +12,6 @@ libsquish = { path = "../libsquish" }
 clap = "3.2.8"
 hyper = { version = "0.14.19", features = [ "stream" ] }
 hyperlocal = "0.8.0"
-serde = "1.0.137"
+serde = "1.0.138"
 serde_json = "1.0.82"
 tokio = { version = "1.16.1", features = [ "full" ] }
