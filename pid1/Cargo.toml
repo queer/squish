@@ -10,7 +10,7 @@ edition = "2018"
 libsquish = { path = "../libsquish" }
 
 clap = "3.2.17"
-futures = "0.3.21"
+futures = "0.3.24"
 nix = "0.25.0"
 reqwest = "0.11.11"
 rlimit = "0.8.3"
