@@ -18,7 +18,7 @@ nix = "0.25.0"
 pretty_env_logger = "0.4.0"
 rlimit = "0.8.3"
 reqwest = "0.11.12"
-serde_json = "1.0.86"
+serde_json = "1.0.87"
 tar = "0.4.38"
 tokio = { version = "1.16.1", features = [ "full" ] }
 tokio-stream = { version = "0.1.11", features = [ "net" ] }
