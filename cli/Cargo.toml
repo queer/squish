@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 libsquish = { path = "../libsquish" }
 
-clap = "3.2.22"
+clap = "4.0.24"
 hyper = { version = "0.14.23", features = [ "stream" ] }
 hyperlocal = "0.8.0"
 serde = "1.0.147"
